@@ -272,12 +272,12 @@
       <div class="card">
         <h2><i class="ti ti-user-plus"></i> Únete al club</h2>
         <div id="regAlert"></div>
-        <label>Nombre</label>
-        <input type="text"   id="regName"  placeholder="Tu nombre" />
-        <label>Correo</label>
+        <label>Nombre <span style="color:#c8903a">*</span></label>
+        <input type="text"   id="regName"  placeholder="Tu nombre" required /><label>Apellido <span style="color:#c8903a">*</span></label><input type="text" id="regLastName" placeholder="Tu apellido" required />
+        <label>Correo <span style="color:#c8903a">*</span></label>
         <input type="email"  id="regEmail" placeholder="correo@ejemplo.com" />
-        <label>Teléfono</label>
-        <input type="tel"    id="regPhone" placeholder="+56 9 XXXX XXXX" />
+        <label>Teléfono <span style="color:#c8903a">*</span></label>
+        <input type="tel"    id="regPhone" placeholder="+56 9 XXXX XXXX" required />
         <label>Sucursal favorita</label>
         <select id="regSuc">
           <option value="">Elige una sucursal</option>
