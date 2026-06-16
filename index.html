@@ -573,7 +573,7 @@
   // Registro de cliente
   // ─────────────────────────────────────────
   function register() {
-    const name  = document.getElementById('regName').value.trim();
+    const name  = document.getElementById('regName').value.trim() + ' ' + document.getElementById('regLastName').value.trim();
     const email = document.getElementById('regEmail').value.trim();
     const phone = document.getElementById('regPhone').value.trim();
     const suc   = document.getElementById('regSuc').value;
