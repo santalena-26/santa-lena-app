@@ -4,289 +4,153 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Santa Leña — Club de clientes</title>
-
-  <!-- Ícono en el celular cuando se instala como app -->
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#2c1503" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Santa Leña" />
-
-  <!-- Íconos Tabler -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
-
-  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --sl-dark:  #2c1503;
-      --sl-brown: #5a2d0c;
-      --sl-mid:   #a0522d;
-      --sl-gold:  #c8903a;
-      --sl-cream: #f5e6c8;
-      --sl-light: #fdf6ec;
-      --bg:       #f4f0eb;
-      --surface:  #ffffff;
-      --text:     #1a1a1a;
-      --text-sec: #6b6b6b;
-      --border:   rgba(0,0,0,0.1);
-      --radius:   14px;
-      --radius-sm:8px;
+      --sl-dark:#2c1503; --sl-brown:#5a2d0c; --sl-mid:#a0522d;
+      --sl-gold:#c8903a; --sl-cream:#f5e6c8; --sl-light:#fdf6ec;
+      --bg:#f4f0eb; --surface:#ffffff; --text:#1a1a1a;
+      --text-sec:#6b6b6b; --border:rgba(0,0,0,0.1);
+      --radius:14px; --radius-sm:8px;
     }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100dvh;
-    }
-
-    /* ── layout ── */
-    .app-wrapper { max-width: 430px; margin: 0 auto; padding: 0 0 2rem; }
-    .admin-wrapper { max-width: 680px; margin: 0 auto; padding: 0 1rem 2rem; }
-
-    .screen { display: none; }
-    .screen.active { display: block; }
-
-    /* ── mode toggle ── */
-    .mode-toggle {
-      display: flex; gap: 8px;
-      max-width: 430px; margin: 0 auto;
-      padding: 12px 16px;
-      background: var(--bg);
-      position: sticky; top: 0; z-index: 10;
-    }
-    .mode-btn {
-      flex: 1; padding: 9px; text-align: center; font-size: 13px;
-      border-radius: var(--radius-sm); border: 0.5px solid var(--border);
-      cursor: pointer; color: var(--text-sec); background: var(--surface);
-      font-weight: 500; transition: all 0.2s;
-    }
-    .mode-btn.active { background: var(--sl-dark); color: var(--sl-cream); border-color: var(--sl-dark); }
-
-    /* ── hero ── */
-    .hero {
-      position: relative; overflow: hidden;
-      margin: 0 16px 16px; border-radius: var(--radius);
-      height: 200px;
-    }
-    .hero img { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; display: block; }
-    .hero-overlay {
-      position: absolute; inset: 0;
-      background: linear-gradient(to top, rgba(44,21,3,0.93) 35%, rgba(44,21,3,0.15) 100%);
-      display: flex; flex-direction: column; justify-content: flex-end; padding: 1.25rem;
-    }
-    .hero-overlay h1 { color: var(--sl-cream); font-size: 22px; font-weight: 600; letter-spacing: 0.5px; }
-    .hero-overlay p  { color: var(--sl-gold);  font-size: 10px; margin-top: 4px; letter-spacing: 2.5px; text-transform: uppercase; }
-
-    .admin-hero {
-      position: relative; overflow: hidden;
-      border-radius: var(--radius); margin-bottom: 16px; height: 160px;
-    }
-    .admin-hero img { width: 100%; height: 100%; object-fit: cover; object-position: center 55%; display: block; }
-    .admin-hero-overlay {
-      position: absolute; inset: 0;
-      background: linear-gradient(105deg, rgba(44,21,3,0.92) 45%, rgba(44,21,3,0.25) 100%);
-      display: flex; align-items: flex-end; padding: 1.25rem;
-    }
-    .admin-hero-inner { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; }
-
-    /* ── cards ── */
-    .card {
-      background: var(--surface); border: 0.5px solid var(--border);
-      border-radius: var(--radius); padding: 1.25rem;
-      margin: 0 16px 16px;
-    }
-    .admin-wrapper .card { margin: 0 0 16px; }
-    .card h2 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 1rem; display: flex; align-items: center; gap: 6px; }
-
-    /* ── stamps ── */
-    .stamps-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin: 0.75rem 0; }
-    .stamp {
-      aspect-ratio: 1; border-radius: 50%; border: 2px solid var(--sl-gold);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; transition: all 0.35s;
-    }
-    .stamp.filled { background: var(--sl-brown); border-color: var(--sl-brown); }
-    .stamp.filled::after { content: "☕"; }
-    .stamp.empty::after  { content: ""; }
-    .stamp.reward { background: var(--sl-gold); border-color: var(--sl-gold); animation: pulse 1.2s infinite; }
-    .stamp.reward::after { content: "🎁"; }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); min-height:100dvh; }
+    .app-wrapper { max-width:430px; margin:0 auto; padding:0 0 2rem; }
+    .admin-wrapper { max-width:680px; margin:0 auto; padding:0 1rem 2rem; }
+    .screen { display:none; } .screen.active { display:block; }
+    .mode-toggle { display:flex; gap:8px; max-width:430px; margin:0 auto; padding:12px 16px; background:var(--bg); position:sticky; top:0; z-index:10; }
+    .mode-btn { flex:1; padding:9px; text-align:center; font-size:13px; border-radius:var(--radius-sm); border:0.5px solid var(--border); cursor:pointer; color:var(--text-sec); background:var(--surface); font-weight:500; transition:all 0.2s; }
+    .mode-btn.active { background:var(--sl-dark); color:var(--sl-cream); border-color:var(--sl-dark); }
+    .hero { position:relative; overflow:hidden; margin:0 16px 16px; border-radius:var(--radius); height:200px; }
+    .hero img { width:100%; height:100%; object-fit:cover; object-position:center 40%; display:block; }
+    .hero-overlay { position:absolute; inset:0; background:linear-gradient(to top,rgba(44,21,3,0.93) 35%,rgba(44,21,3,0.15) 100%); display:flex; flex-direction:column; justify-content:flex-end; padding:1.25rem; }
+    .hero-overlay h1 { color:var(--sl-cream); font-size:22px; font-weight:600; letter-spacing:0.5px; }
+    .hero-overlay p { color:var(--sl-gold); font-size:10px; margin-top:4px; letter-spacing:2.5px; text-transform:uppercase; }
+    .admin-hero { position:relative; overflow:hidden; border-radius:var(--radius); margin-bottom:16px; height:160px; }
+    .admin-hero img { width:100%; height:100%; object-fit:cover; object-position:center 55%; display:block; }
+    .admin-hero-overlay { position:absolute; inset:0; background:linear-gradient(105deg,rgba(44,21,3,0.92) 45%,rgba(44,21,3,0.25) 100%); display:flex; align-items:flex-end; padding:1.25rem; }
+    .admin-hero-inner { display:flex; justify-content:space-between; align-items:flex-end; width:100%; }
+    .card { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin:0 16px 16px; }
+    .admin-wrapper .card { margin:0 0 16px; }
+    .card h2 { font-size:14px; font-weight:600; color:var(--text); margin-bottom:1rem; display:flex; align-items:center; gap:6px; }
+    .stamps-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:0.75rem 0; }
+    .stamp { aspect-ratio:1; border-radius:50%; border:2px solid var(--sl-gold); display:flex; align-items:center; justify-content:center; font-size:20px; transition:all 0.35s; }
+    .stamp.filled { background:var(--sl-brown); border-color:var(--sl-brown); }
+    .stamp.filled::after { content:"☕"; } .stamp.empty::after { content:""; }
+    .stamp.reward { background:var(--sl-gold); border-color:var(--sl-gold); animation:pulse 1.2s infinite; }
+    .stamp.reward::after { content:"🎁"; }
     @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
-
-    .progress-bar-wrap { background: #e8e0d5; border-radius: 20px; height: 5px; margin: 0.5rem 0 0.25rem; }
-    .progress-bar { background: var(--sl-gold); height: 5px; border-radius: 20px; transition: width 0.4s; }
-    .progress-text { font-size: 12px; color: var(--text-sec); text-align: right; }
-
-    /* ── forms ── */
-    label { font-size: 12px; color: var(--text-sec); display: block; margin-bottom: 3px; }
-    input[type=text], input[type=email], input[type=tel], select, textarea {
-      width: 100%; padding: 10px 12px;
-      border: 0.5px solid var(--border); border-radius: var(--radius-sm);
-      font-size: 14px; margin-bottom: 10px;
-      background: var(--surface); color: var(--text);
-      font-family: inherit;
-    }
-    textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--sl-gold); }
-
-    /* ── buttons ── */
-    .btn {
-      width: 100%; padding: 11px; border-radius: var(--radius-sm);
-      font-size: 14px; font-weight: 500; cursor: pointer; border: none;
-      transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
-    }
-    .btn:hover   { opacity: 0.85; }
-    .btn-primary { background: var(--sl-dark);   color: var(--sl-cream); }
-    .btn-secondary { background: #f0ebe4; color: var(--text); border: 0.5px solid var(--border); margin-top: 8px; }
-    .btn-gold    { background: var(--sl-gold);   color: var(--sl-dark); font-weight: 600; }
-    .btn-sm      { width: auto; padding: 7px 14px; font-size: 12px; }
-
-    /* ── badges ── */
-    .badge      { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
-    .badge-centro { background: #fdf1e3; color: #7a3e10; }
-    .badge-prov   { background: #e8f0fb; color: #1a4a7a; }
-
-    /* ── code input ── */
-    .code-input-row { display: flex; gap: 8px; }
+    .progress-bar-wrap { background:#e8e0d5; border-radius:20px; height:5px; margin:0.5rem 0 0.25rem; }
+    .progress-bar { background:var(--sl-gold); height:5px; border-radius:20px; transition:width 0.4s; }
+    .progress-text { font-size:12px; color:var(--text-sec); text-align:right; }
+    label { font-size:12px; color:var(--text-sec); display:block; margin-bottom:3px; }
+    input[type=text],input[type=email],input[type=tel],input[type=password],select,textarea { width:100%; padding:10px 12px; border:0.5px solid var(--border); border-radius:var(--radius-sm); font-size:14px; margin-bottom:10px; background:var(--surface); color:var(--text); font-family:inherit; }
+    textarea { resize:vertical; min-height:80px; line-height:1.5; }
+    input:focus,select:focus,textarea:focus { outline:none; border-color:var(--sl-gold); }
+    .btn { width:100%; padding:11px; border-radius:var(--radius-sm); font-size:14px; font-weight:500; cursor:pointer; border:none; transition:opacity 0.2s; display:flex; align-items:center; justify-content:center; gap:6px; }
+    .btn:hover { opacity:0.85; }
+    .btn-primary { background:var(--sl-dark); color:var(--sl-cream); }
+    .btn-secondary { background:#f0ebe4; color:var(--text); border:0.5px solid var(--border); margin-top:8px; }
+    .btn-gold { background:var(--sl-gold); color:var(--sl-dark); font-weight:600; }
+    .btn-sm { width:auto; padding:7px 14px; font-size:12px; }
+    .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:500; }
+    .badge-centro { background:#fdf1e3; color:#7a3e10; } .badge-prov { background:#e8f0fb; color:#1a4a7a; }
+    .code-input-row { display:flex; gap:8px; }
     .code-input-row input { flex:1; text-align:center; font-size:22px; letter-spacing:8px; font-family:monospace; margin-bottom:0; }
-    .code-input-row .btn  { width:auto; padding:10px 16px; margin:0; }
-
-    /* ── social ── */
-    .social-row { display: flex; gap: 8px; margin-top: 10px; }
-    .social-btn {
-      flex: 1; padding: 9px 6px; border-radius: var(--radius-sm); font-size: 12px;
-      border: 0.5px solid var(--border); cursor: pointer; color: var(--text-sec);
-      background: var(--surface); text-decoration: none;
-      display: flex; align-items: center; justify-content: center; gap: 5px;
-    }
-    .social-btn:hover { background: #f0ebe4; }
-
-    /* ── locations ── */
-    .loc-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
-    .loc-row:last-child { border-bottom: none; }
+    .code-input-row .btn { width:auto; padding:10px 16px; margin:0; }
+    .social-row { display:flex; gap:8px; margin-top:10px; }
+    .social-btn { flex:1; padding:9px 6px; border-radius:var(--radius-sm); font-size:12px; border:0.5px solid var(--border); cursor:pointer; color:var(--text-sec); background:var(--surface); text-decoration:none; display:flex; align-items:center; justify-content:center; gap:5px; }
+    .social-btn:hover { background:#f0ebe4; }
+    .loc-row { display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:0.5px solid var(--border); }
+    .loc-row:last-child { border-bottom:none; }
     .loc-icon { width:34px; height:34px; border-radius:50%; background:var(--sl-light); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-    .loc-icon i { color: var(--sl-mid); font-size: 17px; }
-
-    /* ── alerts ── */
-    .alert { padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 12px; }
-    .alert-success { background: #edf9f0; color: #1a7a40; border: 0.5px solid #a3dbb8; }
-    .alert-error   { background: #fdf0ef; color: #c0392b; border: 0.5px solid #f1948a; }
-
-    /* ── tab bar ── */
-    .tab-bar { display: flex; gap: 8px; margin-bottom: 16px; }
-    .tab {
-      flex: 1; padding: 9px; text-align: center; font-size: 13px;
-      border-radius: var(--radius-sm); border: 0.5px solid var(--border);
-      cursor: pointer; color: var(--text-sec); background: var(--surface); font-weight: 500;
-    }
-    .tab.active { background: var(--sl-dark); color: var(--sl-cream); border-color: var(--sl-dark); }
-
-    /* ── code display ── */
-    .code-display {
-      text-align: center; padding: 2rem 1.5rem;
-      background: var(--sl-light); border-radius: var(--radius); border: 0.5px solid #d4a86a;
-      position: relative; overflow: hidden;
-    }
-    .code-display::before {
-      content: ''; position: absolute; top: -40px; right: -40px;
-      width: 130px; height: 130px; border-radius: 50%; background: rgba(200,144,58,0.1);
-    }
-    .code-num { font-size: 58px; font-weight: 600; letter-spacing: 16px; color: var(--sl-dark); font-family: monospace; line-height: 1; }
-    .timer-bar-wrap { background: rgba(200,144,58,0.2); border-radius: 20px; height: 4px; margin-top: 12px; }
-    .timer-bar  { background: var(--sl-gold); height: 4px; border-radius: 20px; transition: width 1s linear; }
-    .timer-text { font-size: 12px; color: var(--sl-mid); margin-top: 8px; }
-
-    /* ── stats ── */
-    .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
-    .stat-card { background: #f0ebe4; border-radius: var(--radius-sm); padding: 1rem; text-align: center; }
-    .stat-card .num { font-size: 26px; font-weight: 600; color: var(--sl-brown); }
-    .stat-card .lbl { font-size: 11px; color: var(--text-sec); margin-top: 3px; }
-
-    /* ── client list ── */
-    .client-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
-    .client-row:last-child { border-bottom: none; }
+    .loc-icon i { color:var(--sl-mid); font-size:17px; }
+    .alert { padding:10px 14px; border-radius:var(--radius-sm); font-size:13px; margin-bottom:12px; }
+    .alert-success { background:#edf9f0; color:#1a7a40; border:0.5px solid #a3dbb8; }
+    .alert-error { background:#fdf0ef; color:#c0392b; border:0.5px solid #f1948a; }
+    .tab-bar { display:flex; gap:8px; margin-bottom:16px; }
+    .tab { flex:1; padding:9px; text-align:center; font-size:13px; border-radius:var(--radius-sm); border:0.5px solid var(--border); cursor:pointer; color:var(--text-sec); background:var(--surface); font-weight:500; }
+    .tab.active { background:var(--sl-dark); color:var(--sl-cream); border-color:var(--sl-dark); }
+    .code-display { text-align:center; padding:2rem 1.5rem; background:var(--sl-light); border-radius:var(--radius); border:0.5px solid #d4a86a; position:relative; overflow:hidden; }
+    .code-display::before { content:''; position:absolute; top:-40px; right:-40px; width:130px; height:130px; border-radius:50%; background:rgba(200,144,58,0.1); }
+    .code-num { font-size:58px; font-weight:600; letter-spacing:16px; color:var(--sl-dark); font-family:monospace; line-height:1; }
+    .timer-bar-wrap { background:rgba(200,144,58,0.2); border-radius:20px; height:4px; margin-top:12px; }
+    .timer-bar { background:var(--sl-gold); height:4px; border-radius:20px; transition:width 1s linear; }
+    .timer-text { font-size:12px; color:var(--sl-mid); margin-top:8px; }
+    .stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+    .stat-card { background:#f0ebe4; border-radius:var(--radius-sm); padding:1rem; text-align:center; }
+    .stat-card .num { font-size:26px; font-weight:600; color:var(--sl-brown); }
+    .stat-card .lbl { font-size:11px; color:var(--text-sec); margin-top:3px; }
+    .client-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:0.5px solid var(--border); }
+    .client-row:last-child { border-bottom:none; }
     .avatar { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; flex-shrink:0; background:var(--sl-light); color:var(--sl-brown); }
-    .mini-stamps { display: flex; gap: 3px; margin-top: 3px; }
+    .mini-stamps { display:flex; gap:3px; margin-top:3px; }
     .mini-stamp { width:10px; height:10px; border-radius:50%; border:1px solid var(--sl-gold); }
-    .mini-stamp.f { background: var(--sl-brown); border-color: var(--sl-brown); }
-    .empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--text-sec); font-size: 13px; }
-    .suc-pill { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; }
-    .suc-pill.centro      { background: #fdf1e3; color: #7a3e10; }
-    .suc-pill.providencia { background: #e8f0fb; color: #1a4a7a; }
-
-    /* ── promo (cliente) ── */
-    .promo-card { border-radius: var(--radius); overflow: hidden; margin: 0 16px 16px; border: 0.5px solid #d4a86a; }
-    .promo-header { background: var(--sl-dark); padding: 10px 14px; display: flex; align-items: center; gap: 8px; }
-    .promo-header span { color: var(--sl-gold); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; font-weight: 500; }
-    .promo-badge-active { background: var(--sl-gold); color: var(--sl-dark); font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
-    .promo-body  { background: var(--sl-light); padding: 1rem 1.25rem; }
-    .promo-title { font-size: 16px; font-weight: 600; color: var(--sl-dark); margin-bottom: 4px; }
-    .promo-desc  { font-size: 13px; color: var(--sl-mid); line-height: 1.6; }
-    .promo-validity { font-size: 11px; color: #b5874a; margin-top: 8px; display: flex; align-items: center; gap: 4px; }
-
-    /* ── promo editor (admin) ── */
-    .switch-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-    .switch-label { font-size: 13px; color: var(--text); font-weight: 500; }
-    .toggle { position: relative; width: 42px; height: 24px; }
-    .toggle input { opacity: 0; width: 0; height: 0; }
-    .slider { position: absolute; inset: 0; background: #ccc; border-radius: 24px; cursor: pointer; transition: 0.3s; }
+    .mini-stamp.f { background:var(--sl-brown); border-color:var(--sl-brown); }
+    .empty-state { text-align:center; padding:2.5rem 1rem; color:var(--text-sec); font-size:13px; }
+    .suc-pill { display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; }
+    .suc-pill.centro { background:#fdf1e3; color:#7a3e10; } .suc-pill.providencia { background:#e8f0fb; color:#1a4a7a; }
+    .promo-card { border-radius:var(--radius); overflow:hidden; margin:0 16px 16px; border:0.5px solid #d4a86a; }
+    .promo-header { background:var(--sl-dark); padding:10px 14px; display:flex; align-items:center; gap:8px; }
+    .promo-header span { color:var(--sl-gold); font-size:11px; letter-spacing:2px; text-transform:uppercase; font-weight:500; }
+    .promo-badge-active { background:var(--sl-gold); color:var(--sl-dark); font-size:10px; font-weight:600; padding:2px 8px; border-radius:20px; }
+    .promo-body { background:var(--sl-light); padding:1rem 1.25rem; }
+    .promo-title { font-size:16px; font-weight:600; color:var(--sl-dark); margin-bottom:4px; }
+    .promo-desc { font-size:13px; color:var(--sl-mid); line-height:1.6; }
+    .promo-validity { font-size:11px; color:#b5874a; margin-top:8px; display:flex; align-items:center; gap:4px; }
+    .switch-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+    .switch-label { font-size:13px; color:var(--text); font-weight:500; }
+    .toggle { position:relative; width:42px; height:24px; }
+    .toggle input { opacity:0; width:0; height:0; }
+    .slider { position:absolute; inset:0; background:#ccc; border-radius:24px; cursor:pointer; transition:0.3s; }
     .slider:before { content:''; position:absolute; width:18px; height:18px; left:3px; top:3px; background:white; border-radius:50%; transition:0.3s; }
-    input:checked + .slider { background: var(--sl-gold); }
-    input:checked + .slider:before { transform: translateX(18px); }
-    .promo-preview { background: #f0ebe4; border-radius: var(--radius-sm); padding: 1rem; margin-top: 1rem; }
-    .promo-preview .lbl { font-size: 11px; color: var(--text-sec); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+    input:checked + .slider { background:var(--sl-gold); }
+    input:checked + .slider:before { transform:translateX(18px); }
+    .promo-preview { background:#f0ebe4; border-radius:var(--radius-sm); padding:1rem; margin-top:1rem; }
+    .promo-preview .lbl { font-size:11px; color:var(--text-sec); margin-bottom:8px; text-transform:uppercase; letter-spacing:1px; }
+    .loading { text-align:center; padding:2rem; color:var(--text-sec); font-size:13px; }
   </style>
 </head>
 <body>
 
-<!-- ── toggle de modo ── -->
 <div class="mode-toggle">
-  <div class="mode-btn active" id="btnModeClient" onclick="setMode('client')">
-    <i class="ti ti-user"></i> Vista cliente
-  </div>
-  <div class="mode-btn" id="btnModeAdmin" onclick="setMode('admin')">
-    <i class="ti ti-tools"></i> Panel barista
-  </div>
+  <div class="mode-btn active" id="btnModeClient" onclick="setMode('client')"><i class="ti ti-user"></i> Vista cliente</div>
+  <div class="mode-btn" id="btnModeAdmin" onclick="setMode('admin')"><i class="ti ti-tools"></i> Panel barista</div>
 </div>
 
-<!-- ══════════════════════════════════════
-     CLIENTE
-══════════════════════════════════════ -->
+<!-- CLIENTE -->
 <div id="modeClient">
 
-  <!-- pantalla: registro -->
   <div id="scrRegister" class="screen active">
     <div class="app-wrapper">
       <div class="hero">
-        <!-- 📸 REEMPLAZA esta ruta con tu foto real -->
-        <img src="fotos/bowls.jpg" alt="Bowls artesanales Santa Leña" onerror="this.style.background='#5a2d0c'" />
-        <div class="hero-overlay">
-          <h1>Santa Leña</h1>
-          <p>Brunch &amp; Panadería Artesanal</p>
-        </div>
+        <img src="fotos/bowls.JPG" alt="Bowls artesanales Santa Leña" onerror="this.style.background='#5a2d0c'" />
+        <div class="hero-overlay"><h1>Santa Leña</h1><p>Brunch &amp; Panadería Artesanal</p></div>
       </div>
       <div class="card">
         <h2><i class="ti ti-user-plus"></i> Únete al club</h2>
         <div id="regAlert"></div>
         <label>Nombre <span style="color:#c8903a">*</span></label>
-        <input type="text"   id="regName"  placeholder="Tu nombre" required /><label>Apellido <span style="color:#c8903a">*</span></label><input type="text" id="regLastName" placeholder="Tu apellido" required />
+        <input type="text" id="regName" placeholder="Tu nombre" required />
+        <label>Apellido <span style="color:#c8903a">*</span></label>
+        <input type="text" id="regLastName" placeholder="Tu apellido" required />
         <label>Correo <span style="color:#c8903a">*</span></label>
-        <input type="email"  id="regEmail" placeholder="correo@ejemplo.com" />
+        <input type="email" id="regEmail" placeholder="correo@ejemplo.com" required />
         <label>Teléfono <span style="color:#c8903a">*</span></label>
-        <input type="tel"    id="regPhone" placeholder="+56 9 XXXX XXXX" required />
-        <label>Sucursal favorita</label>
+        <input type="tel" id="regPhone" placeholder="+56 9 XXXX XXXX" required />
+        <label>Sucursal favorita <span style="color:#c8903a">*</span></label>
         <select id="regSuc">
           <option value="">Elige una sucursal</option>
           <option value="centro">Santa Leña Centro — San Antonio 333</option>
           <option value="providencia">Santa Leña Providencia — Holanda 100</option>
         </select>
-        <button class="btn btn-primary" onclick="register()">
-          <i class="ti ti-coffee"></i> Registrarme
-        </button>
+        <button class="btn btn-primary" onclick="register()"><i class="ti ti-coffee"></i> Registrarme</button>
       </div>
       <div style="text-align:center;font-size:12px;color:var(--text-sec);margin-bottom:1rem;">
         ¿Ya tienes cuenta? <span style="color:var(--sl-mid);cursor:pointer;" onclick="gotoCard()">Ver mi tarjeta</span>
@@ -294,20 +158,13 @@
     </div>
   </div>
 
-  <!-- pantalla: tarjeta -->
   <div id="scrCard" class="screen">
     <div class="app-wrapper">
       <div class="hero">
-        <img src="fotos/bowls.jpg" alt="Bowls artesanales Santa Leña" onerror="this.style.background='#5a2d0c'" />
-        <div class="hero-overlay">
-          <h1>Santa Leña</h1>
-          <p>Brunch &amp; Panadería Artesanal</p>
-        </div>
+        <img src="fotos/bowls.JPG" alt="Bowls artesanales Santa Leña" onerror="this.style.background='#5a2d0c'" />
+        <div class="hero-overlay"><h1>Santa Leña</h1><p>Brunch &amp; Panadería Artesanal</p></div>
       </div>
-
       <div id="cardAlert" style="padding:0 16px;"></div>
-
-      <!-- sellos -->
       <div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
           <div>
@@ -323,80 +180,48 @@
         <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
         <div class="progress-text" id="progressText"></div>
       </div>
-
-      <!-- promo del mes -->
       <div id="promoClientWrap"></div>
-
-      <!-- código de visita -->
       <div class="card">
         <h2><i class="ti ti-keyboard"></i> Registrar visita</h2>
-        <p style="font-size:12px;color:var(--text-sec);margin-bottom:10px;">
-          Pídele al barista el código de 4 dígitos e ingrésalo aquí.
-        </p>
+        <p style="font-size:12px;color:var(--text-sec);margin-bottom:10px;">Pídele al barista el código de 4 dígitos e ingrésalo aquí.</p>
         <div class="code-input-row">
           <input type="text" id="visitCode" placeholder="0000" maxlength="4" />
           <button class="btn btn-gold" onclick="redeemCode()"><i class="ti ti-check"></i> Validar</button>
         </div>
       </div>
-
-      <!-- ubicaciones -->
       <div class="card">
         <h2><i class="ti ti-map-pin"></i> Encuéntranos</h2>
         <div class="loc-row">
           <div class="loc-icon"><i class="ti ti-building-store"></i></div>
-          <div>
-            <div style="font-size:13px;font-weight:600;">Santa Leña Centro</div>
-            <div style="font-size:12px;color:var(--text-sec);">San Antonio 333, Santiago Centro</div>
-          </div>
+          <div><div style="font-size:13px;font-weight:600;">Santa Leña Centro</div><div style="font-size:12px;color:var(--text-sec);">San Antonio 333, Santiago Centro</div></div>
         </div>
         <div class="loc-row">
           <div class="loc-icon"><i class="ti ti-building-store"></i></div>
-          <div>
-            <div style="font-size:13px;font-weight:600;">Santa Leña Providencia</div>
-            <div style="font-size:12px;color:var(--text-sec);">Holanda 100, local 110, Providencia</div>
-          </div>
+          <div><div style="font-size:13px;font-weight:600;">Santa Leña Providencia</div><div style="font-size:12px;color:var(--text-sec);">Holanda 100, local 110, Providencia</div></div>
         </div>
         <div class="social-row">
-          <a class="social-btn" href="https://www.instagram.com/santalenacafe.cl" target="_blank">
-            <i class="ti ti-brand-instagram"></i> Instagram
-          </a>
-          <a class="social-btn" href="https://maps.google.com/?q=San+Antonio+333+Santiago" target="_blank">
-            <i class="ti ti-map-2"></i> Centro
-          </a>
-          <a class="social-btn" href="https://maps.google.com/?q=Holanda+100+Providencia+Santiago" target="_blank">
-            <i class="ti ti-map-2"></i> Providencia
-          </a>
+          <a class="social-btn" href="https://www.instagram.com/santalenacafe.cl" target="_blank"><i class="ti ti-brand-instagram"></i> Instagram</a>
+          <a class="social-btn" href="https://maps.google.com/?q=San+Antonio+333+Santiago" target="_blank"><i class="ti ti-map-2"></i> Centro</a>
+          <a class="social-btn" href="https://maps.google.com/?q=Holanda+100+Providencia+Santiago" target="_blank"><i class="ti ti-map-2"></i> Providencia</a>
         </div>
       </div>
-
       <div style="padding:0 16px 1rem;">
-        <button class="btn btn-secondary" onclick="logout()">
-          <i class="ti ti-logout"></i> Cerrar sesión
-        </button>
+        <button class="btn btn-secondary" onclick="logout()"><i class="ti ti-logout"></i> Cerrar sesión</button>
       </div>
     </div>
   </div>
+</div>
 
-</div><!-- /modeClient -->
-
-
-<!-- ══════════════════════════════════════
-     ADMIN / BARISTA
-══════════════════════════════════════ -->
+<!-- ADMIN -->
 <div id="modeAdmin" style="display:none;">
 
-  <!-- pantalla: login -->
   <div id="scrAdminLogin" class="screen active">
     <div class="admin-wrapper">
       <div class="admin-hero">
-        <!-- 📸 REEMPLAZA con tu foto real -->
-        <img src="fotos/crepes.jpg" alt="Mesa Santa Leña" onerror="this.style.background='#3d1f0a'" />
+        <img src="fotos/crepes.JPG" alt="Mesa Santa Leña" onerror="this.style.background='#3d1f0a'" />
         <div class="admin-hero-overlay">
           <div class="admin-hero-inner">
-            <div>
-              <div style="color:var(--sl-cream);font-size:20px;font-weight:600;">Panel barista</div>
-              <div style="color:var(--sl-gold);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-top:4px;">Acceso interno Santa Leña</div>
-            </div>
+            <div><div style="color:var(--sl-cream);font-size:20px;font-weight:600;">Panel barista</div><div style="color:var(--sl-gold);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-top:4px;">Acceso interno Santa Leña</div></div>
           </div>
         </div>
       </div>
@@ -404,50 +229,34 @@
         <h2><i class="ti ti-lock"></i> Ingresar</h2>
         <div id="adminLoginAlert"></div>
         <label>Sucursal</label>
-        <select id="adminSucSel">
-          <option value="centro">Santa Leña Centro</option>
-          <option value="providencia">Santa Leña Providencia</option>
-        </select>
+        <select id="adminSucSel"><option value="centro">Santa Leña Centro</option><option value="providencia">Santa Leña Providencia</option></select>
         <label>Contraseña</label>
         <input type="password" id="adminPass" placeholder="Contraseña" />
-        <button class="btn btn-primary" onclick="adminLogin()">
-          <i class="ti ti-door-enter"></i> Ingresar al panel
-        </button>
+        <button class="btn btn-primary" onclick="adminLogin()"><i class="ti ti-door-enter"></i> Ingresar al panel</button>
       </div>
     </div>
   </div>
 
-  <!-- pantalla: panel -->
   <div id="scrAdminPanel" class="screen">
     <div class="admin-wrapper">
       <div class="admin-hero">
-        <img src="fotos/crepes.jpg" alt="Mesa Santa Leña" onerror="this.style.background='#3d1f0a'" />
+        <img src="fotos/crepes.JPG" alt="Mesa Santa Leña" onerror="this.style.background='#3d1f0a'" />
         <div class="admin-hero-overlay">
           <div class="admin-hero-inner">
-            <div>
-              <div style="color:var(--sl-cream);font-size:20px;font-weight:600;">Panel barista</div>
-              <div style="color:var(--sl-gold);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-top:4px;" id="adminSucLabel">—</div>
-            </div>
-            <button class="btn btn-sm" style="background:rgba(253,246,236,0.15);color:var(--sl-cream);border:0.5px solid rgba(253,246,236,0.3);" onclick="adminLogout()">
-              <i class="ti ti-logout"></i> Salir
-            </button>
+            <div><div style="color:var(--sl-cream);font-size:20px;font-weight:600;">Panel barista</div><div style="color:var(--sl-gold);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-top:4px;" id="adminSucLabel">—</div></div>
+            <button class="btn btn-sm" style="background:rgba(253,246,236,0.15);color:var(--sl-cream);border:0.5px solid rgba(253,246,236,0.3);" onclick="adminLogout()"><i class="ti ti-logout"></i> Salir</button>
           </div>
         </div>
       </div>
-
       <div class="tab-bar">
-        <div class="tab active" id="tabCode"    onclick="adminTab('code')"><i class="ti ti-qrcode"></i> Código</div>
-        <div class="tab"        id="tabPromo"   onclick="adminTab('promo')"><i class="ti ti-speakerphone"></i> Promoción</div>
-        <div class="tab"        id="tabClients" onclick="adminTab('clients')"><i class="ti ti-users"></i> Clientes</div>
+        <div class="tab active" id="tabCode" onclick="adminTab('code')"><i class="ti ti-qrcode"></i> Código</div>
+        <div class="tab" id="tabPromo" onclick="adminTab('promo')"><i class="ti ti-speakerphone"></i> Promoción</div>
+        <div class="tab" id="tabClients" onclick="adminTab('clients')"><i class="ti ti-users"></i> Clientes</div>
       </div>
-
-      <!-- tab: código -->
       <div id="adminTabCode">
         <div class="card">
           <h2><i class="ti ti-refresh"></i> Código de visita</h2>
-          <p style="font-size:13px;color:var(--text-sec);margin-bottom:1.25rem;">
-            Genera un código temporal y díselo al cliente para registrar su visita.
-          </p>
+          <p style="font-size:13px;color:var(--text-sec);margin-bottom:1.25rem;">Genera un código temporal y díselo al cliente para registrar su visita.</p>
           <div id="codeBox" style="display:none;margin-bottom:1rem;">
             <div class="code-display">
               <div style="font-size:10px;color:var(--sl-mid);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">Código activo</div>
@@ -456,25 +265,16 @@
               <div class="timer-text" id="codeTimer">Válido por 2:00 min</div>
             </div>
           </div>
-          <button class="btn btn-primary" onclick="generateCode()">
-            <i class="ti ti-refresh"></i> Generar código nuevo
-          </button>
+          <button class="btn btn-primary" onclick="generateCode()"><i class="ti ti-refresh"></i> Generar código nuevo</button>
         </div>
       </div>
-
-      <!-- tab: promoción -->
       <div id="adminTabPromo" style="display:none;">
         <div class="card">
           <h2><i class="ti ti-speakerphone"></i> Promoción del mes</h2>
-          <p style="font-size:13px;color:var(--text-sec);margin-bottom:1.25rem;">
-            Lo que escribas aquí aparecerá en la tarjeta del cliente al instante.
-          </p>
+          <p style="font-size:13px;color:var(--text-sec);margin-bottom:1.25rem;">Lo que escribas aquí aparecerá en la tarjeta del cliente al instante.</p>
           <div class="switch-row">
             <span class="switch-label">Mostrar promoción a clientes</span>
-            <label class="toggle">
-              <input type="checkbox" id="promoActive" onchange="savePromo()" />
-              <span class="slider"></span>
-            </label>
+            <label class="toggle"><input type="checkbox" id="promoActive" /><span class="slider"></span></label>
           </div>
           <label>Título</label>
           <input type="text" id="promoTitle" placeholder="Ej: 2x1 en lattes los martes" oninput="previewPromo()" />
@@ -482,289 +282,230 @@
           <textarea id="promoDesc" placeholder="Ej: Durante todo mayo, pide un latte y te regalamos otro." oninput="previewPromo()"></textarea>
           <label>Válido hasta</label>
           <input type="text" id="promoValidity" placeholder="Ej: 31 de mayo de 2026" oninput="previewPromo()" />
-          <div class="promo-preview">
-            <div class="lbl">Vista previa</div>
-            <div id="promoPreviewBox"></div>
-          </div>
-          <button class="btn btn-primary" style="margin-top:1rem;" onclick="savePromo()">
-            <i class="ti ti-device-floppy"></i> Guardar y publicar
-          </button>
+          <div class="promo-preview"><div class="lbl">Vista previa</div><div id="promoPreviewBox"></div></div>
+          <button class="btn btn-primary" style="margin-top:1rem;" onclick="savePromo()"><i class="ti ti-device-floppy"></i> Guardar y publicar</button>
           <div id="promoSaveAlert" style="margin-top:8px;"></div>
         </div>
       </div>
-
-      <!-- tab: clientes -->
       <div id="adminTabClients" style="display:none;">
         <div class="stat-grid" id="statGrid"></div>
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
             <h2 style="margin-bottom:0;"><i class="ti ti-users"></i> Clientes registrados</h2>
-            <button class="btn btn-secondary btn-sm" onclick="exportCSV()">
-              <i class="ti ti-download"></i> Exportar CSV
-            </button>
+            <button class="btn btn-secondary btn-sm" onclick="exportCSV()"><i class="ti ti-download"></i> Exportar CSV</button>
           </div>
           <div id="clientList"></div>
         </div>
       </div>
-
     </div>
   </div>
-
-</div><!-- /modeAdmin -->
-
+</div>
 
 <script>
-  // ─────────────────────────────────────────
-  // ⚙️  CONFIGURACIÓN — edita solo esto
-  // ─────────────────────────────────────────
-  const ADMIN_PASSWORD = '1234'; // 🔑 Cambia esto por una contraseña segura
+  const ADMIN_PASSWORD = '1234';
+  const SUPABASE_URL   = 'https://bnugefcqfstbytayeblg.supabase.co';
+  const SUPABASE_KEY   = 'sb_publishable_pDKGyRZkISJ1abDCw_ZWTw_lvPHWN0W';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // ─────────────────────────────────────────
-  // Estado local (localStorage)
-  // ─────────────────────────────────────────
-  let clients = JSON.parse(localStorage.getItem('sl_clients') || '[]');
   let currentClient = JSON.parse(localStorage.getItem('sl_current') || 'null');
-  let promo = JSON.parse(localStorage.getItem('sl_promo') || JSON.stringify({
-    active: true,
-    title: '2x1 en lattes los martes',
-    desc: 'Durante todo mayo, pide un latte y te regalamos otro. Válido en ambas sucursales de Santa Leña.',
-    validity: '31 de mayo de 2026'
-  }));
+  let promo = { activa:false, titulo:'', descripcion:'', validez:'' };
   let adminSuc = 'centro';
   let codeTimer = null, activeCode = null, codeExpiry = null;
 
-  // ─────────────────────────────────────────
-  // Guardar datos
-  // ─────────────────────────────────────────
-  function save()       { localStorage.setItem('sl_clients', JSON.stringify(clients)); }
-  function saveCur()    { localStorage.setItem('sl_current', JSON.stringify(currentClient)); }
-  function savePromoLS(){ localStorage.setItem('sl_promo',   JSON.stringify(promo)); }
+  function saveCur() { localStorage.setItem('sl_current', JSON.stringify(currentClient)); }
 
-  // ─────────────────────────────────────────
-  // Navegación
-  // ─────────────────────────────────────────
   function setMode(m) {
-    document.getElementById('modeClient').style.display = m === 'client' ? '' : 'none';
-    document.getElementById('modeAdmin').style.display  = m === 'admin'  ? '' : 'none';
-    document.getElementById('btnModeClient').classList.toggle('active', m === 'client');
-    document.getElementById('btnModeAdmin').classList.toggle('active',  m === 'admin');
-    if (m === 'client') {
-      currentClient ? (showScreen('scrCard'), renderCard()) : showScreen('scrRegister');
-    } else {
-      showAdminScreen('scrAdminLogin');
-    }
+    document.getElementById('modeClient').style.display = m==='client'?'':'none';
+    document.getElementById('modeAdmin').style.display  = m==='admin'?'':'none';
+    document.getElementById('btnModeClient').classList.toggle('active', m==='client');
+    document.getElementById('btnModeAdmin').classList.toggle('active',  m==='admin');
+    if (m==='client') { currentClient?(showScreen('scrCard'),renderCard()):showScreen('scrRegister'); }
+    else showAdminScreen('scrAdminLogin');
   }
   function showScreen(id) {
-    document.querySelectorAll('#modeClient .screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('#modeClient .screen').forEach(s=>s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
   }
   function showAdminScreen(id) {
-    document.querySelectorAll('#modeAdmin .screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('#modeAdmin .screen').forEach(s=>s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
   }
   function alertMsg(elId, msg, type) {
-    const el = document.getElementById(elId);
-    el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
-    setTimeout(() => { el.innerHTML = ''; }, 3500);
+    const el=document.getElementById(elId);
+    el.innerHTML=`<div class="alert alert-${type}">${msg}</div>`;
+    setTimeout(()=>{el.innerHTML='';},3500);
   }
-  function gotoCard() { if (currentClient) { renderCard(); showScreen('scrCard'); } }
+  function gotoCard() { if(currentClient){renderCard();showScreen('scrCard');} }
 
-  // ─────────────────────────────────────────
-  // Registro de cliente
-  // ─────────────────────────────────────────
-  function register() {
-    const name  = document.getElementById('regName').value.trim() + ' ' + document.getElementById('regLastName').value.trim();
-    const email = document.getElementById('regEmail').value.trim();
-    const phone = document.getElementById('regPhone').value.trim();
-    const suc   = document.getElementById('regSuc').value;
-    if (!name || !email || !suc) {
-      alertMsg('regAlert', 'Completa nombre, correo y sucursal.', 'error'); return;
+  async function register() {
+    const nombre   = (document.getElementById('regName').value.trim()+' '+document.getElementById('regLastName').value.trim()).trim();
+    const email    = document.getElementById('regEmail').value.trim();
+    const telefono = document.getElementById('regPhone').value.trim();
+    const sucursal = document.getElementById('regSuc').value;
+    if (!nombre||!email||!telefono||!sucursal) {
+      alertMsg('regAlert','Completa todos los campos obligatorios.','error'); return;
     }
-    let ex = clients.find(c => c.email === email);
-    if (ex) { currentClient = ex; saveCur(); renderCard(); showScreen('scrCard'); return; }
-    const c = { id: Date.now(), name, email, phone, suc, stamps: 0, free: 0, joined: new Date().toLocaleDateString('es-CL') };
-    clients.push(c); save(); currentClient = c; saveCur(); renderCard(); showScreen('scrCard');
+    const {data:existing} = await sb.from('clientes').select('*').eq('email',email).maybeSingle();
+    if (existing) { currentClient=existing; saveCur(); renderCard(); showScreen('scrCard'); return; }
+    const {data,error} = await sb.from('clientes').insert([{nombre,email,telefono,sucursal,sellos:0,gratis:0}]).select().single();
+    if (error) { alertMsg('regAlert','Error al registrar. Intenta de nuevo.','error'); return; }
+    currentClient=data; saveCur(); renderCard(); showScreen('scrCard');
   }
 
-  // ─────────────────────────────────────────
-  // Renderizar tarjeta del cliente
-  // ─────────────────────────────────────────
   function renderCard() {
     if (!currentClient) return;
-    document.getElementById('cardName').textContent = currentClient.name;
-    const b = document.getElementById('cardBadge');
-    b.textContent = currentClient.suc === 'centro' ? 'Centro' : 'Providencia';
-    b.className = 'badge ' + (currentClient.suc === 'centro' ? 'badge-centro' : 'badge-prov');
-    document.getElementById('cardCount').textContent = `${currentClient.stamps}/8`;
-    const grid = document.getElementById('stampsGrid'); grid.innerHTML = '';
-    for (let i = 0; i < 8; i++) {
-      const s = document.createElement('div');
-      s.className = 'stamp ' + (i < currentClient.stamps ? 'filled' : 'empty');
-      grid.appendChild(s);
-    }
-    document.getElementById('progressBar').style.width = Math.round((currentClient.stamps / 8) * 100) + '%';
-    const left = 8 - currentClient.stamps;
-    document.getElementById('progressText').textContent =
-      currentClient.stamps >= 8
-        ? '¡Tienes un café gratis! Muéstraselo al barista 🎁'
-        : `${left} café${left !== 1 ? 's' : ''} más para el gratis`;
+    document.getElementById('cardName').textContent = currentClient.nombre;
+    const b=document.getElementById('cardBadge');
+    b.textContent=currentClient.sucursal==='centro'?'Centro':'Providencia';
+    b.className='badge '+(currentClient.sucursal==='centro'?'badge-centro':'badge-prov');
+    document.getElementById('cardCount').textContent=`${currentClient.sellos}/8`;
+    const grid=document.getElementById('stampsGrid'); grid.innerHTML='';
+    for(let i=0;i<8;i++){const s=document.createElement('div');s.className='stamp '+(i<currentClient.sellos?'filled':'empty');grid.appendChild(s);}
+    document.getElementById('progressBar').style.width=Math.round((currentClient.sellos/8)*100)+'%';
+    const left=8-currentClient.sellos;
+    document.getElementById('progressText').textContent=
+      currentClient.sellos>=8?'¡Tienes un café gratis! Muéstraselo al barista 🎁':`${left} café${left!==1?'s':''} más para el gratis`;
     renderPromoClient();
   }
 
-  // ─────────────────────────────────────────
-  // Canjear código de visita
-  // ─────────────────────────────────────────
-  function redeemCode() {
-    const input = document.getElementById('visitCode').value.trim();
-    if (!activeCode || !codeExpiry) { alertMsg('cardAlert', 'No hay código activo. Pídelo al barista.', 'error'); return; }
-    if (Date.now() > codeExpiry)    { alertMsg('cardAlert', 'El código expiró. Pide uno nuevo.', 'error'); activeCode = null; return; }
-    if (input !== activeCode)        { alertMsg('cardAlert', 'Código incorrecto. Inténtalo de nuevo.', 'error'); return; }
-    const idx = clients.findIndex(c => c.id === currentClient.id);
-    if (currentClient.stamps >= 8) { clients[idx].free = (clients[idx].free || 0) + 1; clients[idx].stamps = 0; }
-    else { clients[idx].stamps = Math.min(8, (clients[idx].stamps || 0) + 1); }
-    currentClient = clients[idx]; save(); saveCur();
-    document.getElementById('visitCode').value = ''; activeCode = null;
-    renderCard(); alertMsg('cardAlert', '¡Sello registrado! ☕ Gracias por visitarnos.', 'success');
+  async function redeemCode() {
+    const input=document.getElementById('visitCode').value.trim();
+    if (!activeCode||!codeExpiry){alertMsg('cardAlert','No hay código activo. Pídelo al barista.','error');return;}
+    if (Date.now()>codeExpiry){alertMsg('cardAlert','El código expiró. Pide uno nuevo.','error');activeCode=null;return;}
+    if (input!==activeCode){alertMsg('cardAlert','Código incorrecto. Inténtalo de nuevo.','error');return;}
+    const newSellos = currentClient.sellos>=8?0:currentClient.sellos+1;
+    const newGratis = currentClient.sellos>=8?(currentClient.gratis||0)+1:currentClient.gratis;
+    const {data,error} = await sb.from('clientes').update({sellos:newSellos,gratis:newGratis}).eq('id',currentClient.id).select().single();
+    if (error){alertMsg('cardAlert','Error al guardar. Intenta de nuevo.','error');return;}
+    currentClient=data; saveCur();
+    document.getElementById('visitCode').value=''; activeCode=null;
+    renderCard(); alertMsg('cardAlert','¡Sello registrado! ☕ Gracias por visitarnos.','success');
   }
 
-  function logout() { currentClient = null; localStorage.removeItem('sl_current'); showScreen('scrRegister'); }
+  function logout(){currentClient=null;localStorage.removeItem('sl_current');showScreen('scrRegister');}
 
-  // ─────────────────────────────────────────
-  // Admin
-  // ─────────────────────────────────────────
-  function adminLogin() {
-    const pass = document.getElementById('adminPass').value;
-    adminSuc = document.getElementById('adminSucSel').value;
-    if (pass !== ADMIN_PASSWORD) { alertMsg('adminLoginAlert', 'Contraseña incorrecta.', 'error'); return; }
-    document.getElementById('adminSucLabel').textContent = adminSuc === 'centro' ? 'Santa Leña Centro' : 'Santa Leña Providencia';
+  function adminLogin(){
+    const pass=document.getElementById('adminPass').value;
+    adminSuc=document.getElementById('adminSucSel').value;
+    if(pass!==ADMIN_PASSWORD){alertMsg('adminLoginAlert','Contraseña incorrecta.','error');return;}
+    document.getElementById('adminSucLabel').textContent=adminSuc==='centro'?'Santa Leña Centro':'Santa Leña Providencia';
     showAdminScreen('scrAdminPanel'); adminTab('code');
   }
-  function adminLogout() { if (codeTimer) clearInterval(codeTimer); activeCode = null; showAdminScreen('scrAdminLogin'); }
+  function adminLogout(){if(codeTimer)clearInterval(codeTimer);activeCode=null;showAdminScreen('scrAdminLogin');}
 
-  function adminTab(t) {
-    ['Code','Promo','Clients'].forEach(x => {
-      document.getElementById('tab' + x).classList.toggle('active', t === x.toLowerCase());
-      document.getElementById('adminTab' + x).style.display = t === x.toLowerCase() ? '' : 'none';
+  function adminTab(t){
+    ['Code','Promo','Clients'].forEach(x=>{
+      document.getElementById('tab'+x).classList.toggle('active',t===x.toLowerCase());
+      document.getElementById('adminTab'+x).style.display=t===x.toLowerCase()?'':'none';
     });
-    if (t === 'promo')   loadPromoEditor();
-    if (t === 'clients') renderClientList();
+    if(t==='promo')   loadPromoEditor();
+    if(t==='clients') renderClientList();
   }
 
-  // ─────────────────────────────────────────
-  // Código de visita
-  // ─────────────────────────────────────────
-  function generateCode() {
-    if (codeTimer) clearInterval(codeTimer);
-    activeCode = String(Math.floor(1000 + Math.random() * 9000));
-    codeExpiry = Date.now() + 120000;
-    document.getElementById('genCode').textContent = activeCode;
-    document.getElementById('codeBox').style.display = '';
-    let secs = 120; tick(secs);
-    codeTimer = setInterval(() => {
+  function generateCode(){
+    if(codeTimer)clearInterval(codeTimer);
+    activeCode=String(Math.floor(1000+Math.random()*9000));
+    codeExpiry=Date.now()+120000;
+    document.getElementById('genCode').textContent=activeCode;
+    document.getElementById('codeBox').style.display='';
+    let secs=120; tick(secs);
+    codeTimer=setInterval(()=>{
       secs--;
-      if (secs <= 0) { clearInterval(codeTimer); document.getElementById('codeTimer').textContent = 'Código expirado'; document.getElementById('timerBar').style.width = '0%'; activeCode = null; }
+      if(secs<=0){clearInterval(codeTimer);document.getElementById('codeTimer').textContent='Código expirado';document.getElementById('timerBar').style.width='0%';activeCode=null;}
       else tick(secs);
-    }, 1000);
+    },1000);
   }
-  function tick(s) {
-    const m = Math.floor(s / 60), sec = s % 60;
-    document.getElementById('codeTimer').textContent = `Válido por ${m}:${String(sec).padStart(2,'0')} min`;
-    document.getElementById('timerBar').style.width = Math.round((s / 120) * 100) + '%';
+  function tick(s){
+    const m=Math.floor(s/60),sec=s%60;
+    document.getElementById('codeTimer').textContent=`Válido por ${m}:${String(sec).padStart(2,'0')} min`;
+    document.getElementById('timerBar').style.width=Math.round((s/120)*100)+'%';
   }
 
-  // ─────────────────────────────────────────
-  // Promoción
-  // ─────────────────────────────────────────
-  function buildPromoHTML(p) {
-    if (!p || !p.active || !p.title) return '';
+  function buildPromoHTML(p){
+    if(!p||!p.activa||!p.titulo) return '';
     return `<div class="promo-card">
-      <div class="promo-header">
-        <i class="ti ti-speakerphone" style="color:var(--sl-gold);font-size:16px;"></i>
-        <span>Promoción del mes</span>
-        <div style="flex:1;"></div>
-        <div class="promo-badge-active">Activo</div>
-      </div>
+      <div class="promo-header"><i class="ti ti-speakerphone" style="color:var(--sl-gold);font-size:16px;"></i><span>Promoción del mes</span><div style="flex:1;"></div><div class="promo-badge-active">Activo</div></div>
       <div class="promo-body">
-        <div class="promo-title">${p.title}</div>
-        <div class="promo-desc">${p.desc || ''}</div>
-        ${p.validity ? `<div class="promo-validity"><i class="ti ti-calendar" style="font-size:13px;"></i> Válido hasta el ${p.validity}</div>` : ''}
-      </div>
-    </div>`;
+        <div class="promo-title">${p.titulo}</div>
+        <div class="promo-desc">${p.descripcion||''}</div>
+        ${p.validez?`<div class="promo-validity"><i class="ti ti-calendar" style="font-size:13px;"></i> Válido hasta el ${p.validez}</div>`:''}
+      </div></div>`;
   }
-  function renderPromoClient() {
-    document.getElementById('promoClientWrap').innerHTML = buildPromoHTML(promo);
+  function renderPromoClient(){ document.getElementById('promoClientWrap').innerHTML=buildPromoHTML(promo); }
+
+  function previewPromo(){
+    const p={activa:true,titulo:document.getElementById('promoTitle').value.trim(),descripcion:document.getElementById('promoDesc').value.trim(),validez:document.getElementById('promoValidity').value.trim()};
+    document.getElementById('promoPreviewBox').innerHTML=p.titulo?buildPromoHTML(p):'<div style="font-size:12px;color:var(--text-sec);padding:8px 0;">Escribe un título para ver la vista previa.</div>';
   }
-  function previewPromo() {
-    const p = {
-      active: true,
-      title: document.getElementById('promoTitle').value.trim(),
-      desc:  document.getElementById('promoDesc').value.trim(),
-      validity: document.getElementById('promoValidity').value.trim()
-    };
-    document.getElementById('promoPreviewBox').innerHTML = p.title
-      ? buildPromoHTML(p)
-      : '<div style="font-size:12px;color:var(--text-sec);padding:8px 0;">Escribe un título para ver la vista previa.</div>';
+
+  async function savePromo(){
+    const data={activa:document.getElementById('promoActive').checked,titulo:document.getElementById('promoTitle').value.trim(),descripcion:document.getElementById('promoDesc').value.trim(),validez:document.getElementById('promoValidity').value.trim()};
+    let error;
+    if(promo&&promo.id){({error}=await sb.from('promo').update(data).eq('id',promo.id));}
+    else{const res=await sb.from('promo').insert([data]).select().single();if(res.data)promo=res.data;error=res.error;}
+    if(error){alertMsg('promoSaveAlert','Error al guardar.','error');return;}
+    promo={...promo,...data};
+    renderPromoClient();
+    alertMsg('promoSaveAlert','¡Promoción publicada! Los clientes ya pueden verla.','success');
   }
-  function savePromo() {
-    promo = {
-      active: document.getElementById('promoActive').checked,
-      title: document.getElementById('promoTitle').value.trim(),
-      desc:  document.getElementById('promoDesc').value.trim(),
-      validity: document.getElementById('promoValidity').value.trim()
-    };
-    savePromoLS(); renderPromoClient();
-    alertMsg('promoSaveAlert', '¡Promoción publicada! Los clientes ya pueden verla.', 'success');
-  }
-  function loadPromoEditor() {
-    document.getElementById('promoActive').checked = promo.active;
-    document.getElementById('promoTitle').value    = promo.title    || '';
-    document.getElementById('promoDesc').value     = promo.desc     || '';
-    document.getElementById('promoValidity').value = promo.validity || '';
+
+  function loadPromoEditor(){
+    document.getElementById('promoActive').checked=promo.activa||false;
+    document.getElementById('promoTitle').value=promo.titulo||'';
+    document.getElementById('promoDesc').value=promo.descripcion||'';
+    document.getElementById('promoValidity').value=promo.validez||'';
     previewPromo();
   }
 
-  // ─────────────────────────────────────────
-  // Lista de clientes
-  // ─────────────────────────────────────────
-  function renderClientList() {
-    const f = clients.filter(c => c.suc === adminSuc);
-    document.getElementById('statGrid').innerHTML = `
-      <div class="stat-card"><div class="num">${f.length}</div><div class="lbl">Clientes</div></div>
-      <div class="stat-card"><div class="num">${f.reduce((a,c) => a + (c.stamps||0), 0)}</div><div class="lbl">Sellos activos</div></div>
-      <div class="stat-card"><div class="num">${f.reduce((a,c) => a + (c.free||0), 0)}</div><div class="lbl">Cafés gratis</div></div>`;
-    const list = document.getElementById('clientList');
-    if (!f.length) { list.innerHTML = '<div class="empty-state"><i class="ti ti-coffee" style="font-size:32px"></i><br><br>Sin clientes registrados aún.</div>'; return; }
-    list.innerHTML = f.map(c => {
-      const ini  = c.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
-      const dots = Array.from({length:8}, (_,i) => `<div class="mini-stamp${i < c.stamps ? ' f' : ''}"></div>`).join('');
+  async function renderClientList(){
+    document.getElementById('clientList').innerHTML='<div class="loading">Cargando...</div>';
+    const {data:f}=await sb.from('clientes').select('*').eq('sucursal',adminSuc).order('created_at',{ascending:false});
+    const clients=f||[];
+    document.getElementById('statGrid').innerHTML=`
+      <div class="stat-card"><div class="num">${clients.length}</div><div class="lbl">Clientes</div></div>
+      <div class="stat-card"><div class="num">${clients.reduce((a,c)=>a+(c.sellos||0),0)}</div><div class="lbl">Sellos activos</div></div>
+      <div class="stat-card"><div class="num">${clients.reduce((a,c)=>a+(c.gratis||0),0)}</div><div class="lbl">Cafés gratis</div></div>`;
+    const list=document.getElementById('clientList');
+    if(!clients.length){list.innerHTML='<div class="empty-state"><i class="ti ti-coffee" style="font-size:32px"></i><br><br>Sin clientes registrados aún.</div>';return;}
+    list.innerHTML=clients.map(c=>{
+      const ini=c.nombre.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const dots=Array.from({length:8},(_,i)=>`<div class="mini-stamp${i<c.sellos?' f':''}"></div>`).join('');
+      const fecha=c.created_at?new Date(c.created_at).toLocaleDateString('es-CL'):'—';
       return `<div class="client-row">
         <div class="avatar">${ini}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:600;">${c.name}</div>
+          <div style="font-size:13px;font-weight:600;">${c.nombre}</div>
           <div style="font-size:11px;color:var(--text-sec);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.email}</div>
           <div class="mini-stamps">${dots}</div>
         </div>
         <div style="text-align:right;flex-shrink:0;">
-          <div class="suc-pill ${c.suc}">${c.suc === 'centro' ? 'Centro' : 'Providencia'}</div>
-          <div style="font-size:11px;color:var(--text-sec);margin-top:4px;">Desde ${c.joined}</div>
-          ${c.free > 0 ? `<div style="font-size:11px;color:var(--sl-mid);margin-top:2px;">${c.free} gratis canjeado${c.free>1?'s':''}</div>` : ''}
+          <div class="suc-pill ${c.sucursal}">${c.sucursal==='centro'?'Centro':'Providencia'}</div>
+          <div style="font-size:11px;color:var(--text-sec);margin-top:4px;">Desde ${fecha}</div>
+          ${c.gratis>0?`<div style="font-size:11px;color:var(--sl-mid);margin-top:2px;">${c.gratis} gratis canjeado${c.gratis>1?'s':''}</div>`:''}
         </div>
       </div>`;
     }).join('');
   }
 
-  function exportCSV() {
-    const f = clients.filter(c => c.suc === adminSuc);
-    const rows = f.map(c => `${c.name},${c.email},${c.phone||''},${c.stamps},${c.free||0},${c.suc},${c.joined}`).join('\n');
-    const blob = new Blob(['Nombre,Correo,Teléfono,Sellos,Gratis,Sucursal,Desde\n' + rows], {type:'text/csv'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `clientes-santa-lena-${adminSuc}.csv`; a.click();
+  async function exportCSV(){
+    const {data:f}=await sb.from('clientes').select('*').eq('sucursal',adminSuc);
+    const clients=f||[];
+    const rows=clients.map(c=>`${c.nombre},${c.email},${c.telefono||''},${c.sellos},${c.gratis||0},${c.sucursal},${c.created_at?new Date(c.created_at).toLocaleDateString('es-CL'):''}`).join('\n');
+    const blob=new Blob(['Nombre,Correo,Teléfono,Sellos,Gratis,Sucursal,Desde\n'+rows],{type:'text/csv'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`clientes-santa-lena-${adminSuc}.csv`;a.click();
   }
 
-  // ─────────────────────────────────────────
-  // Inicio
-  // ─────────────────────────────────────────
-  if (currentClient) { renderCard(); showScreen('scrCard'); }
-</script>
+  async function init(){
+    const {data}=await sb.from('promo').select('*').limit(1).maybeSingle();
+    if(data) promo=data;
+    if(currentClient){
+      const {data:c}=await sb.from('clientes').select('*').eq('id',currentClient.id).maybeSingle();
+      if(c){currentClient=c;saveCur();}
+      renderCard(); showScreen('scrCard');
+    }
+  }
 
+  init();
+</script>
 </body>
 </html>
