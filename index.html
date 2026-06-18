@@ -402,11 +402,15 @@
     if(t==='clients') renderClientList();
   }
 
-  function generateCode(){
+  async function generateCode(){
     if(codeTimer)clearInterval(codeTimer);
-    activeCode=String(Math.floor(1000+Math.random()*9000));
-    codeExpiry=Date.now()+120000;
-    document.getElementById('genCode').textContent=activeCode;
+    const codigo=String(Math.floor(1000+Math.random()*9000));
+    const expira_en=Date.now()+120000;
+    // Guardar en Supabase
+    await sb.from('codigos').delete().eq('sucursal',adminSuc);
+    await sb.from('codigos').insert([{codigo,sucursal:adminSuc,expira_en}]);
+    activeCode=codigo; codeExpiry=expira_en;
+    document.getElementById('genCode').textContent=codigo;
     document.getElementById('codeBox').style.display='';
     let secs=120; tick(secs);
     codeTimer=setInterval(()=>{
