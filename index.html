@@ -374,7 +374,7 @@
   const {data:rows}=await sb.from('codigos').select('*').eq('sucursal',currentClient.sucursal).limit(1);
   if(!rows||!rows.length){alertMsg('cardAlert','No hay código activo. Pídelo al barista.','error');return;}
   const row=rows[0];
-  if(Date.now()>row.expira_en){alertMsg('cardAlert','El código expiró. Pide uno nuevo.','error');return;}
+  if(Math.floor(Date.now()/1000)>row.expira_en){alertMsg('cardAlert','El código expiró. Pide uno nuevo.','error');return;}
   if(input!==row.codigo){alertMsg('cardAlert','Código incorrecto. Inténtalo de nuevo.','error');return;}
   const newSellos=currentClient.sellos>=8?0:currentClient.sellos+1;
   const newGratis=currentClient.sellos>=8?(currentClient.gratis||0)+1:currentClient.gratis;
@@ -408,7 +408,7 @@
   async function generateCode(){
     if(codeTimer)clearInterval(codeTimer);
     const codigo=String(Math.floor(1000+Math.random()*9000));
-    const expira_en=Date.now()+120000;
+   const expira_en=Math.floor(Date.now()/1000)+120;
     // Guardar en Supabase
     await sb.from('codigos').delete().eq('sucursal',adminSuc);
     await sb.from('codigos').insert([{codigo,sucursal:adminSuc,expira_en}]);
