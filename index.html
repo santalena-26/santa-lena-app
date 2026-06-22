@@ -42,7 +42,9 @@
     .stamps-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:0.75rem 0; }
     .stamp { aspect-ratio:1; border-radius:50%; border:2px solid var(--sl-gold); display:flex; align-items:center; justify-content:center; font-size:20px; transition:all 0.35s; }
     .stamp.filled { background:var(--sl-brown); border-color:var(--sl-brown); }
-    .stamp.filled::after { content:"☕"; } .stamp.empty::after { content:""; }
+    .stamp.filled::after { content:""; }
+    .stamp.filled { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cellipse cx='50' cy='50' rx='28' ry='38' fill='%23f5e6c8'/%3E%3Cpath d='M50 15 Q65 30 65 50 Q65 70 50 85 Q35 70 35 50 Q35 30 50 15Z' fill='%23c8903a'/%3E%3Cpath d='M50 18 Q50 50 50 82' stroke='%235a2d0c' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-size:75%; background-repeat:no-repeat; background-position:center; }
+    .stamp.empty::after { content:""; }
     .stamp.reward { background:var(--sl-gold); border-color:var(--sl-gold); animation:pulse 1.2s infinite; }
     .stamp.reward::after { content:"🎁"; }
     @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
@@ -181,6 +183,16 @@
         <div class="progress-text" id="progressText"></div>
       </div>
       <div id="promoClientWrap"></div>
+
+      <!-- google review -->
+      <div id="googleReviewWrap"></div>
+
+      <!-- beneficios -->
+      <div class="benefits">
+        <div class="benefit"><div class="benefit-icon">🍞</div><div class="benefit-text">Pan fresco cada día</div></div>
+        <div class="benefit"><div class="benefit-icon">☕</div><div class="benefit-text">Café de especialidad</div></div>
+        <div class="benefit"><div class="benefit-icon">🤍</div><div class="benefit-text">Atención con cariño</div></div>
+      </div>
       <div class="card">
         <h2><i class="ti ti-keyboard"></i> Registrar visita</h2>
         <p style="font-size:12px;color:var(--text-sec);margin-bottom:10px;">Pídele al barista el código de 4 dígitos e ingrésalo aquí.</p>
@@ -307,7 +319,12 @@
   const SUPABASE_KEY   = 'sb_publishable_pDKGyRZkISJ1abDCw_ZWTw_lvPHWN0W';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  let currentClient = JSON.parse(localStorage.getItem('sl_current') || 'null');
+  const GOOGLE_REVIEW = {
+    centro:      'https://g.page/r/CUtGtTE8OEhWEAE/review',
+    providencia: 'https://g.page/r/CfQgXAMP0qFuEAE/review'
+  };
+
+  
   let promo = { activa:false, titulo:'', descripcion:'', validez:'' };
   let adminSuc = 'centro';
   let codeTimer = null, activeCode = null, codeExpiry = null;
@@ -366,24 +383,42 @@
     document.getElementById('progressText').textContent=
       currentClient.sellos>=8?'¡Tienes un café gratis! Muéstraselo al barista 🎁':`${left} café${left!==1?'s':''} más para el gratis`;
     renderPromoClient();
+    renderGoogleReview();
+  }
+
+  function renderGoogleReview() {
+    if(!currentClient) return;
+    const url = GOOGLE_REVIEW[currentClient.sucursal];
+    const suc = currentClient.sucursal==='centro'?'Santiago Centro':'Providencia';
+    document.getElementById('googleReviewWrap').innerHTML = `
+      <div class="review-card">
+        <div class="review-header">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          <span>¿Te gustó tu visita en ${suc}?</span>
+        </div>
+        <div class="review-body">
+          <div>
+            <div class="review-stars">★★★★★</div>
+            <div class="review-text">Tu opinión nos ayuda a crecer. ¡Toma solo 1 minuto!</div>
+          </div>
+          <a class="review-btn" href="${url}" target="_blank"><i class="ti ti-star"></i> Opinar</a>
+        </div>
+      </div>`;
   }
 
   async function redeemCode() {
-  const input=document.getElementById('visitCode').value.trim();
-  if(!input){alertMsg('cardAlert','Ingresa el código del barista.','error');return;}
-  const {data:rows}=await sb.from('codigos').select('*').eq('sucursal',currentClient.sucursal).limit(1);
-  if(!rows||!rows.length){alertMsg('cardAlert','No hay código activo. Pídelo al barista.','error');return;}
-  const row=rows[0];
-  if(Math.floor(Date.now()/1000)>row.expira_en){alertMsg('cardAlert','El código expiró. Pide uno nuevo.','error');return;}
-  if(input!==row.codigo){alertMsg('cardAlert','Código incorrecto. Inténtalo de nuevo.','error');return;}
-  const newSellos=currentClient.sellos>=8?0:currentClient.sellos+1;
-  const newGratis=currentClient.sellos>=8?(currentClient.gratis||0)+1:currentClient.gratis;
-  const {data,error}=await sb.from('clientes').update({sellos:newSellos,gratis:newGratis}).eq('id',currentClient.id).select().single();
-  if(error){alertMsg('cardAlert','Error al guardar. Intenta de nuevo.','error');return;}
-  currentClient=data; saveCur();
-  document.getElementById('visitCode').value='';
-  renderCard(); alertMsg('cardAlert','¡Sello registrado! ☕ Gracias por visitarnos.','success');
-}
+    const input=document.getElementById('visitCode').value.trim();
+    if (!activeCode||!codeExpiry){alertMsg('cardAlert','No hay código activo. Pídelo al barista.','error');return;}
+    if (Date.now()>codeExpiry){alertMsg('cardAlert','El código expiró. Pide uno nuevo.','error');activeCode=null;return;}
+    if (input!==activeCode){alertMsg('cardAlert','Código incorrecto. Inténtalo de nuevo.','error');return;}
+    const newSellos = currentClient.sellos>=8?0:currentClient.sellos+1;
+    const newGratis = currentClient.sellos>=8?(currentClient.gratis||0)+1:currentClient.gratis;
+    const {data,error} = await sb.from('clientes').update({sellos:newSellos,gratis:newGratis}).eq('id',currentClient.id).select().single();
+    if (error){alertMsg('cardAlert','Error al guardar. Intenta de nuevo.','error');return;}
+    currentClient=data; saveCur();
+    document.getElementById('visitCode').value=''; activeCode=null;
+    renderCard(); alertMsg('cardAlert','¡Sello registrado! ☕ Gracias por visitarnos.','success');
+  }
 
   function logout(){currentClient=null;localStorage.removeItem('sl_current');showScreen('scrRegister');}
 
@@ -408,7 +443,7 @@
   async function generateCode(){
     if(codeTimer)clearInterval(codeTimer);
     const codigo=String(Math.floor(1000+Math.random()*9000));
-   const expira_en=Math.floor(Date.now()/1000)+120;
+    const expira_en=Date.now()+120000;
     // Guardar en Supabase
     await sb.from('codigos').delete().eq('sucursal',adminSuc);
     await sb.from('codigos').insert([{codigo,sucursal:adminSuc,expira_en}]);
@@ -438,7 +473,10 @@
         ${p.validez?`<div class="promo-validity"><i class="ti ti-calendar" style="font-size:13px;"></i> Válido hasta el ${p.validez}</div>`:''}
       </div></div>`;
   }
-  function renderPromoClient(){ document.getElementById('promoClientWrap').innerHTML=buildPromoHTML(promo); }
+  function renderPromoClient(){
+    const wrap=document.getElementById('promoClientWrap');
+    if(wrap) wrap.innerHTML=buildPromoHTML(promo);
+  }
 
   function previewPromo(){
     const p={activa:true,titulo:document.getElementById('promoTitle').value.trim(),descripcion:document.getElementById('promoDesc').value.trim(),validez:document.getElementById('promoValidity').value.trim()};
