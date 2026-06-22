@@ -372,7 +372,7 @@
     const input=document.getElementById('visitCode').value.trim();
     if (!activeCode||!codeExpiry){alertMsg('cardAlert','No hay código activo. Pídelo al barista.','error');return;}
     if (Date.now()>codeExpiry){alertMsg('cardAlert','El código expiró. Pide uno nuevo.','error');activeCode=null;return;}
-    if (input!==activeCode){alertMsg('cardAlert','Código incorrecto. Inténtalo de nuevo.','error');return;}
+    if(input!==row.codigo){alertMsg('cardAlert','Input: '+input+' | DB: '+row.codigo,'error');return;}
     const newSellos = currentClient.sellos>=8?0:currentClient.sellos+1;
     const newGratis = currentClient.sellos>=8?(currentClient.gratis||0)+1:currentClient.gratis;
     const {data,error} = await sb.from('clientes').update({sellos:newSellos,gratis:newGratis}).eq('id',currentClient.id).select().single();
