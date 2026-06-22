@@ -369,18 +369,21 @@
   }
 
   async function redeemCode() {
-    const input=document.getElementById('visitCode').value.trim();
-    if (!activeCode||!codeExpiry){alertMsg('cardAlert','No hay código activo. Pídelo al barista.','error');return;}
-    if (Date.now()>codeExpiry){alertMsg('cardAlert','El código expiró. Pide uno nuevo.','error');activeCode=null;return;}
-    if(input!==row.codigo){alertMsg('cardAlert','Input: '+input+' | DB: '+row.codigo,'error');return;}
-    const newSellos = currentClient.sellos>=8?0:currentClient.sellos+1;
-    const newGratis = currentClient.sellos>=8?(currentClient.gratis||0)+1:currentClient.gratis;
-    const {data,error} = await sb.from('clientes').update({sellos:newSellos,gratis:newGratis}).eq('id',currentClient.id).select().single();
-    if (error){alertMsg('cardAlert','Error al guardar. Intenta de nuevo.','error');return;}
-    currentClient=data; saveCur();
-    document.getElementById('visitCode').value=''; activeCode=null;
-    renderCard(); alertMsg('cardAlert','¡Sello registrado! ☕ Gracias por visitarnos.','success');
-  }
+  const input=document.getElementById('visitCode').value.trim();
+  if(!input){alertMsg('cardAlert','Ingresa el código del barista.','error');return;}
+  const {data:rows}=await sb.from('codigos').select('*').eq('sucursal',currentClient.sucursal).limit(1);
+  if(!rows||!rows.length){alertMsg('cardAlert','No hay código activo. Pídelo al barista.','error');return;}
+  const row=rows[0];
+  if(Date.now()>row.expira_en){alertMsg('cardAlert','El código expiró. Pide uno nuevo.','error');return;}
+  if(input!==row.codigo){alertMsg('cardAlert','Código incorrecto. Inténtalo de nuevo.','error');return;}
+  const newSellos=currentClient.sellos>=8?0:currentClient.sellos+1;
+  const newGratis=currentClient.sellos>=8?(currentClient.gratis||0)+1:currentClient.gratis;
+  const {data,error}=await sb.from('clientes').update({sellos:newSellos,gratis:newGratis}).eq('id',currentClient.id).select().single();
+  if(error){alertMsg('cardAlert','Error al guardar. Intenta de nuevo.','error');return;}
+  currentClient=data; saveCur();
+  document.getElementById('visitCode').value='';
+  renderCard(); alertMsg('cardAlert','¡Sello registrado! ☕ Gracias por visitarnos.','success');
+}
 
   function logout(){currentClient=null;localStorage.removeItem('sl_current');showScreen('scrRegister');}
 
