@@ -1,556 +1,696 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Santa Leña — Club de clientes</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#2c1503" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Santa Leña" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --sl-dark:#2c1503; --sl-brown:#5a2d0c; --sl-mid:#a0522d;
-      --sl-gold:#c8903a; --sl-cream:#f5e6c8; --sl-light:#fdf6ec;
-      --bg:#f4f0eb; --surface:#ffffff; --text:#1a1a1a;
-      --text-sec:#6b6b6b; --border:rgba(0,0,0,0.1);
-      --radius:14px; --radius-sm:8px;
-    }
-    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); min-height:100dvh; }
-    .app-wrapper { max-width:430px; margin:0 auto; padding:0 0 2rem; }
-    .admin-wrapper { max-width:680px; margin:0 auto; padding:0 1rem 2rem; }
-    .screen { display:none; } .screen.active { display:block; }
-    .mode-toggle { display:flex; gap:8px; max-width:430px; margin:0 auto; padding:12px 16px; background:var(--bg); position:sticky; top:0; z-index:10; }
-    .mode-btn { flex:1; padding:9px; text-align:center; font-size:13px; border-radius:var(--radius-sm); border:0.5px solid var(--border); cursor:pointer; color:var(--text-sec); background:var(--surface); font-weight:500; transition:all 0.2s; }
-    .mode-btn.active { background:var(--sl-dark); color:var(--sl-cream); border-color:var(--sl-dark); }
-    .hero { position:relative; overflow:hidden; margin:0 16px 16px; border-radius:var(--radius); height:200px; }
-    .hero img { width:100%; height:100%; object-fit:cover; object-position:center 40%; display:block; }
-    .hero-overlay { position:absolute; inset:0; background:linear-gradient(to top,rgba(44,21,3,0.93) 35%,rgba(44,21,3,0.15) 100%); display:flex; flex-direction:column; justify-content:flex-end; padding:1.25rem; }
-    .hero-overlay h1 { color:var(--sl-cream); font-size:22px; font-weight:600; letter-spacing:0.5px; }
-    .hero-overlay p { color:var(--sl-gold); font-size:10px; margin-top:4px; letter-spacing:2.5px; text-transform:uppercase; }
-    .admin-hero { position:relative; overflow:hidden; border-radius:var(--radius); margin-bottom:16px; height:160px; }
-    .admin-hero img { width:100%; height:100%; object-fit:cover; object-position:center 55%; display:block; }
-    .admin-hero-overlay { position:absolute; inset:0; background:linear-gradient(105deg,rgba(44,21,3,0.92) 45%,rgba(44,21,3,0.25) 100%); display:flex; align-items:flex-end; padding:1.25rem; }
-    .admin-hero-inner { display:flex; justify-content:space-between; align-items:flex-end; width:100%; }
-    .card { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius); padding:1.25rem; margin:0 16px 16px; }
-    .admin-wrapper .card { margin:0 0 16px; }
-    .card h2 { font-size:14px; font-weight:600; color:var(--text); margin-bottom:1rem; display:flex; align-items:center; gap:6px; }
-    .stamps-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:0.75rem 0; }
-    .stamp { aspect-ratio:1; border-radius:50%; border:2px solid var(--sl-gold); display:flex; align-items:center; justify-content:center; font-size:20px; transition:all 0.35s; }
-    .stamp.filled { background:var(--sl-brown); border-color:var(--sl-brown); }
-    .stamp.filled::after { content:""; }
-    .stamp.filled { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cellipse cx='50' cy='50' rx='28' ry='38' fill='%23f5e6c8'/%3E%3Cpath d='M50 15 Q65 30 65 50 Q65 70 50 85 Q35 70 35 50 Q35 30 50 15Z' fill='%23c8903a'/%3E%3Cpath d='M50 18 Q50 50 50 82' stroke='%235a2d0c' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-size:75%; background-repeat:no-repeat; background-position:center; }
-    .stamp.empty::after { content:""; }
-    .stamp.reward { background:var(--sl-gold); border-color:var(--sl-gold); animation:pulse 1.2s infinite; }
-    .stamp.reward::after { content:"🎁"; }
-    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
-    .progress-bar-wrap { background:#e8e0d5; border-radius:20px; height:5px; margin:0.5rem 0 0.25rem; }
-    .progress-bar { background:var(--sl-gold); height:5px; border-radius:20px; transition:width 0.4s; }
-    .progress-text { font-size:12px; color:var(--text-sec); text-align:right; }
-    label { font-size:12px; color:var(--text-sec); display:block; margin-bottom:3px; }
-    input[type=text],input[type=email],input[type=tel],input[type=password],select,textarea { width:100%; padding:10px 12px; border:0.5px solid var(--border); border-radius:var(--radius-sm); font-size:14px; margin-bottom:10px; background:var(--surface); color:var(--text); font-family:inherit; }
-    textarea { resize:vertical; min-height:80px; line-height:1.5; }
-    input:focus,select:focus,textarea:focus { outline:none; border-color:var(--sl-gold); }
-    .btn { width:100%; padding:11px; border-radius:var(--radius-sm); font-size:14px; font-weight:500; cursor:pointer; border:none; transition:opacity 0.2s; display:flex; align-items:center; justify-content:center; gap:6px; }
-    .btn:hover { opacity:0.85; }
-    .btn-primary { background:var(--sl-dark); color:var(--sl-cream); }
-    .btn-secondary { background:#f0ebe4; color:var(--text); border:0.5px solid var(--border); margin-top:8px; }
-    .btn-gold { background:var(--sl-gold); color:var(--sl-dark); font-weight:600; }
-    .btn-sm { width:auto; padding:7px 14px; font-size:12px; }
-    .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:500; }
-    .badge-centro { background:#fdf1e3; color:#7a3e10; } .badge-prov { background:#e8f0fb; color:#1a4a7a; }
-    .code-input-row { display:flex; gap:8px; }
-    .code-input-row input { flex:1; text-align:center; font-size:22px; letter-spacing:8px; font-family:monospace; margin-bottom:0; }
-    .code-input-row .btn { width:auto; padding:10px 16px; margin:0; }
-    .social-row { display:flex; gap:8px; margin-top:10px; }
-    .social-btn { flex:1; padding:9px 6px; border-radius:var(--radius-sm); font-size:12px; border:0.5px solid var(--border); cursor:pointer; color:var(--text-sec); background:var(--surface); text-decoration:none; display:flex; align-items:center; justify-content:center; gap:5px; }
-    .social-btn:hover { background:#f0ebe4; }
-    .loc-row { display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:0.5px solid var(--border); }
-    .loc-row:last-child { border-bottom:none; }
-    .loc-icon { width:34px; height:34px; border-radius:50%; background:var(--sl-light); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-    .loc-icon i { color:var(--sl-mid); font-size:17px; }
-    .alert { padding:10px 14px; border-radius:var(--radius-sm); font-size:13px; margin-bottom:12px; }
-    .alert-success { background:#edf9f0; color:#1a7a40; border:0.5px solid #a3dbb8; }
-    .alert-error { background:#fdf0ef; color:#c0392b; border:0.5px solid #f1948a; }
-    .tab-bar { display:flex; gap:8px; margin-bottom:16px; }
-    .tab { flex:1; padding:9px; text-align:center; font-size:13px; border-radius:var(--radius-sm); border:0.5px solid var(--border); cursor:pointer; color:var(--text-sec); background:var(--surface); font-weight:500; }
-    .tab.active { background:var(--sl-dark); color:var(--sl-cream); border-color:var(--sl-dark); }
-    .code-display { text-align:center; padding:2rem 1.5rem; background:var(--sl-light); border-radius:var(--radius); border:0.5px solid #d4a86a; position:relative; overflow:hidden; }
-    .code-display::before { content:''; position:absolute; top:-40px; right:-40px; width:130px; height:130px; border-radius:50%; background:rgba(200,144,58,0.1); }
-    .code-num { font-size:58px; font-weight:600; letter-spacing:16px; color:var(--sl-dark); font-family:monospace; line-height:1; }
-    .timer-bar-wrap { background:rgba(200,144,58,0.2); border-radius:20px; height:4px; margin-top:12px; }
-    .timer-bar { background:var(--sl-gold); height:4px; border-radius:20px; transition:width 1s linear; }
-    .timer-text { font-size:12px; color:var(--sl-mid); margin-top:8px; }
-    .stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
-    .stat-card { background:#f0ebe4; border-radius:var(--radius-sm); padding:1rem; text-align:center; }
-    .stat-card .num { font-size:26px; font-weight:600; color:var(--sl-brown); }
-    .stat-card .lbl { font-size:11px; color:var(--text-sec); margin-top:3px; }
-    .client-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:0.5px solid var(--border); }
-    .client-row:last-child { border-bottom:none; }
-    .avatar { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; flex-shrink:0; background:var(--sl-light); color:var(--sl-brown); }
-    .mini-stamps { display:flex; gap:3px; margin-top:3px; }
-    .mini-stamp { width:10px; height:10px; border-radius:50%; border:1px solid var(--sl-gold); }
-    .mini-stamp.f { background:var(--sl-brown); border-color:var(--sl-brown); }
-    .empty-state { text-align:center; padding:2.5rem 1rem; color:var(--text-sec); font-size:13px; }
-    .suc-pill { display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; }
-    .suc-pill.centro { background:#fdf1e3; color:#7a3e10; } .suc-pill.providencia { background:#e8f0fb; color:#1a4a7a; }
-    .promo-card { border-radius:var(--radius); overflow:hidden; margin:0 16px 16px; border:0.5px solid #d4a86a; }
-    .promo-header { background:var(--sl-dark); padding:10px 14px; display:flex; align-items:center; gap:8px; }
-    .promo-header span { color:var(--sl-gold); font-size:11px; letter-spacing:2px; text-transform:uppercase; font-weight:500; }
-    .promo-badge-active { background:var(--sl-gold); color:var(--sl-dark); font-size:10px; font-weight:600; padding:2px 8px; border-radius:20px; }
-    .promo-body { background:var(--sl-light); padding:1rem 1.25rem; }
-    .promo-title { font-size:16px; font-weight:600; color:var(--sl-dark); margin-bottom:4px; }
-    .promo-desc { font-size:13px; color:var(--sl-mid); line-height:1.6; }
-    .promo-validity { font-size:11px; color:#b5874a; margin-top:8px; display:flex; align-items:center; gap:4px; }
-    .switch-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
-    .switch-label { font-size:13px; color:var(--text); font-weight:500; }
-    .toggle { position:relative; width:42px; height:24px; }
-    .toggle input { opacity:0; width:0; height:0; }
-    .slider { position:absolute; inset:0; background:#ccc; border-radius:24px; cursor:pointer; transition:0.3s; }
-    .slider:before { content:''; position:absolute; width:18px; height:18px; left:3px; top:3px; background:white; border-radius:50%; transition:0.3s; }
-    input:checked + .slider { background:var(--sl-gold); }
-    input:checked + .slider:before { transform:translateX(18px); }
-    .promo-preview { background:#f0ebe4; border-radius:var(--radius-sm); padding:1rem; margin-top:1rem; }
-    .promo-preview .lbl { font-size:11px; color:var(--text-sec); margin-bottom:8px; text-transform:uppercase; letter-spacing:1px; }
-    .loading { text-align:center; padding:2rem; color:var(--text-sec); font-size:13px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#2c1503">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Santa Leña — Club de Clientes</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --sl-dark:#2c1503;
+  --sl-mid:#5a2d0c;
+  --sl-gold:#c8903a;
+  --sl-cream:#f5e6c8;
+  --card:#3a2008;
+  --muted:#a08862;
+  --sage:#8aa07a;
+}
+html{height:100%}
+body{min-height:100%;background:var(--sl-dark);font-family:'DM Sans',sans-serif;color:var(--sl-cream)}
+/* La app ya NO bloquea el scroll: cada pantalla scrollea con el documento */
+.app{width:100%;max-width:440px;margin:0 auto;background:var(--sl-dark);position:relative;min-height:100vh}
+
+/* SCREENS — el scroll es del documento, no de un contenedor con overflow */
+.screen{display:none;flex-direction:column;min-height:100vh;padding-bottom:30px}
+.screen.active{display:flex}
+
+/* LOADING */
+.lov{position:fixed;inset:0;background:rgba(44,21,3,.88);z-index:600;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.lov.show{display:flex}
+.spin{width:34px;height:34px;border:3px solid rgba(200,144,58,.25);border-top-color:var(--sl-gold);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.lmsg{font-size:13px;color:var(--muted)}
+
+/* COMMON */
+.btn{background:var(--sl-gold);color:var(--sl-dark);border:none;border-radius:11px;padding:14px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:all .2s;width:100%}
+.btn:hover{background:#d9a04a}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ════ PANTALLA 1: ELEGIR PERFIL ════ */
+#choose{justify-content:center;align-items:center;padding:40px 24px;text-align:center}
+.ch-logo{margin-bottom:14px}
+.ch-logo-img{width:120px;height:120px;border-radius:50%;margin-top:16px;display:block;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.ch-brand{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--sl-cream);line-height:1}
+.ch-tag{font-size:10px;color:var(--sl-gold);letter-spacing:3px;text-transform:uppercase;margin-top:6px}
+.ch-pillars{display:flex;flex-direction:column;gap:5px;margin:20px 0 30px}
+.ch-pillar{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--muted);justify-content:center}
+.ch-q{font-size:14px;color:var(--sl-cream);margin-bottom:14px}
+.ch-options{display:flex;flex-direction:column;gap:11px;width:100%;max-width:380px}
+.ch-opt{background:var(--card);border:1px solid rgba(200,144,58,.2);border-radius:14px;padding:18px 20px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:14px;text-align:left}
+.ch-opt:hover{border-color:var(--sl-gold)}
+.ch-opt:active{transform:scale(.98)}
+.ch-opt-ico{width:46px;height:46px;border-radius:12px;background:rgba(200,144,58,.12);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.ch-opt-txt{flex:1}
+.ch-opt-name{font-size:16px;font-weight:500;color:var(--sl-cream);margin-bottom:2px}
+.ch-opt-sub{font-size:12px;color:var(--muted)}
+.ch-opt-arr{font-size:18px;color:var(--muted)}
+
+/* ════ AUTH ════ */
+.auth-inner{padding:48px 24px 28px;display:flex;flex-direction:column;width:100%;max-width:440px;margin:0 auto}
+.back-btn{background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0;margin-bottom:22px;text-align:left;display:flex;align-items:center;gap:6px;align-self:flex-start}
+.auth-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--sl-cream);margin-bottom:6px}
+.auth-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5}
+.auth-tabs{display:flex;background:var(--card);border-radius:11px;padding:4px;margin-bottom:22px;border:1px solid rgba(200,144,58,.15)}
+.auth-tab{flex:1;padding:10px;border:none;background:transparent;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;transition:all .2s}
+.auth-tab.active{background:var(--sl-gold);color:var(--sl-dark);font-weight:500}
+.ig{margin-bottom:13px}
+.ig label{display:block;font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.ig input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(200,144,58,.2);border-radius:10px;padding:12px 13px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--sl-cream);outline:none;transition:border-color .2s}
+.ig input:focus{border-color:var(--sl-gold)}
+.ig input::placeholder{color:var(--muted);opacity:.5}
+.ig.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.suc-pick{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px}
+.sp-opt{background:rgba(255,255,255,.05);border:1.5px solid rgba(200,144,58,.18);border-radius:11px;padding:12px;cursor:pointer;transition:all .2s}
+.sp-opt.active{border-color:var(--sl-gold);background:rgba(200,144,58,.12)}
+.sp-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);margin-bottom:6px;transition:all .2s}
+.sp-opt.active .sp-dot{background:var(--sl-gold);box-shadow:0 0 6px var(--sl-gold)}
+.sp-name{font-size:13px;font-weight:500;color:var(--sl-cream);margin-bottom:1px}
+.sp-addr{font-size:10px;color:var(--muted);line-height:1.4}
+.suc-label{font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;display:block;margin-bottom:8px}
+.auth-err{font-size:12px;color:#e8857a;text-align:center;min-height:16px;margin-bottom:8px}
+
+/* CHECKBOXES consentimiento */
+.consent{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;cursor:pointer}
+.consent input{appearance:none;-webkit-appearance:none;width:20px;height:20px;border:1.5px solid rgba(200,144,58,.4);border-radius:6px;flex-shrink:0;margin-top:1px;cursor:pointer;position:relative;transition:all .2s;background:rgba(255,255,255,.04)}
+.consent input:checked{background:var(--sl-gold);border-color:var(--sl-gold)}
+.consent input:checked::after{content:'✓';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--sl-dark);font-size:13px;font-weight:700}
+.consent-txt{font-size:12px;color:var(--muted);line-height:1.5}
+.consent-txt a{color:var(--sl-gold);text-decoration:none}
+.consent-txt .req{color:#e8a87a}
+
+/* ════ HEADER ════ */
+.head{padding:46px 18px 14px;display:flex;align-items:center;justify-content:space-between}
+.head-logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--sl-cream);display:flex;align-items:center;gap:6px}
+.head-dot{width:6px;height:6px;background:var(--sl-gold);border-radius:50%}
+.head-exit{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px}
+
+/* ════ SELECTOR SUCURSAL ════ */
+.suc-bar{margin:0 18px 16px;background:var(--card);border-radius:14px;padding:14px 16px;border:1px solid rgba(200,144,58,.15)}
+.suc-bar-label{font-size:11px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.suc-bar-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* ════ TARJETA ════ */
+.card{margin:0 18px 16px;background:var(--card);border-radius:16px;padding:20px;border:1px solid rgba(200,144,58,.18)}
+.lc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px}
+.lc-name{font-size:17px;font-weight:500;color:var(--sl-cream)}
+.lc-sellos-lbl{font-size:11px;color:var(--muted);text-align:right}
+.lc-sellos-num{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--sl-gold);text-align:right;line-height:1}
+.lc-suc-pill{display:inline-block;background:rgba(200,144,58,.14);border:1px solid rgba(200,144,58,.3);border-radius:100px;padding:3px 11px;font-size:11px;color:var(--sl-gold);font-weight:500;margin-bottom:16px}
+.stamp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:14px}
+.stamp{aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid rgba(200,144,58,.35);transition:all .3s}
+.stamp.filled{border-color:var(--sl-gold);background:rgba(200,144,58,.1)}
+.lc-progress{height:5px;background:rgba(255,255,255,.07);border-radius:100px;overflow:hidden;margin-bottom:8px}
+.lc-progress-fill{height:100%;background:var(--sl-gold);border-radius:100px;transition:width .5s ease}
+.lc-next{font-size:11px;color:var(--muted);text-align:right}
+.lc-free{background:rgba(138,160,122,.15);border:1px solid var(--sage);border-radius:10px;padding:10px 13px;margin-top:12px;font-size:12px;color:#b8cba8;display:none;align-items:center;gap:8px}
+.lc-free.show{display:flex}
+
+/* ════ VALIDAR ════ */
+.card-head{display:flex;align-items:center;gap:9px;margin-bottom:5px}
+.card-ico{width:30px;height:30px;border-radius:8px;background:rgba(200,144,58,.12);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.card-title{font-size:15px;font-weight:500;color:var(--sl-cream)}
+.card-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:15px}
+.code-row{display:flex;align-items:center;gap:12px}
+.bean-circle{width:60px;height:60px;border-radius:50%;background:var(--sl-dark);border:2px solid rgba(200,144,58,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.code-mid{flex:1}
+.code-boxes{display:flex;gap:7px;margin-bottom:9px}
+.cb{flex:1;aspect-ratio:1;background:rgba(255,255,255,.05);border:1.5px solid rgba(200,144,58,.22);border-radius:11px;text-align:center;font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:var(--sl-cream);outline:none;caret-color:var(--sl-gold);transition:border-color .2s;-webkit-appearance:none;appearance:none}
+.cb:focus{border-color:var(--sl-gold);background:rgba(200,144,58,.06)}
+.cb.has{border-color:rgba(200,144,58,.45)}
+.alert-box{display:none;margin-top:12px;border-radius:10px;padding:11px 14px}
+.alert-box.show{display:flex;align-items:flex-start;gap:9px}
+.ab-success{background:rgba(200,144,58,.1);border:1px solid rgba(200,144,58,.3)}
+.ab-error{background:rgba(200,90,70,.12);border:1px solid rgba(200,90,70,.3)}
+.ab-txt{font-size:12px;line-height:1.5}
+.ab-txt strong{display:block;font-size:13px;margin-bottom:1px}
+.ab-success .ab-txt strong{color:var(--sl-gold)}
+.ab-error .ab-txt{color:#e8a89a}
+.ab-error .ab-txt strong{color:#e8857a}
+
+/* ════ CALIFICAR ════ */
+.rating-reveal{display:none;margin:0 18px 16px}
+.rating-reveal.show{display:block}
+.rating-inner{background:var(--card);border-radius:16px;padding:18px 20px;border:1px solid rgba(200,144,58,.25)}
+.ri-top{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.g-badge{width:22px;height:22px;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.g-letter{font-size:14px;font-weight:700;background:linear-gradient(135deg,#4285f4,#34a853,#fbbc04,#ea4335);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1}
+.ri-title{font-size:14px;font-weight:500;color:var(--sl-cream)}
+.ri-sub{font-size:12px;color:var(--muted);margin-bottom:13px;line-height:1.5}
+.stars-row{display:flex;gap:6px;margin-bottom:13px}
+.star{background:none;border:none;cursor:pointer;font-size:26px;filter:grayscale(1) brightness(.55);transition:all .18s}
+.star.on{filter:none}
+.btn-opinar{width:100%;background:transparent;border:1px solid rgba(200,144,58,.4);border-radius:100px;padding:10px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--sl-gold);cursor:pointer;transition:all .2s}
+.btn-opinar:hover:not(:disabled){background:rgba(200,144,58,.12)}
+.btn-opinar:disabled{opacity:.35;cursor:not-allowed}
+.btn-opinar.done{background:rgba(138,160,122,.12);border-color:var(--sage);color:#b8cba8}
+
+/* ════ ENCUÉNTRANOS ════ */
+.fl{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid rgba(200,144,58,.08);cursor:pointer;transition:opacity .2s;text-decoration:none}
+.fl:last-child{border-bottom:none;padding-bottom:0}
+.fl:hover{opacity:.7}
+.fl-ico{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.fi-ig{background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)}
+.fi-gm{background:#1a73e8}
+.fl-txt{flex:1}
+.fl-name{font-size:13px;color:var(--sl-cream)}
+.fl-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.fl-arr{font-size:14px;color:var(--muted)}
+
+/* PROMOS */
+.sh{padding:0 18px;margin-bottom:11px}
+.sh-t{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;color:var(--sl-cream)}
+.promos-scr{padding:0 18px;display:flex;gap:11px;overflow-x:auto;scrollbar-width:none;margin-bottom:18px}
+.promos-scr::-webkit-scrollbar{display:none}
+.pc{flex-shrink:0;width:215px;background:var(--card);border-radius:14px;border:1px solid rgba(200,144,58,.12)}
+.pc-body{padding:14px 15px}
+.pc-tag{display:inline-block;background:var(--sl-gold);color:var(--sl-dark);font-size:9px;font-weight:500;padding:3px 8px;border-radius:100px;margin-bottom:8px}
+.pc-name{font-size:14px;font-weight:500;color:var(--sl-cream);margin-bottom:4px;font-family:'Playfair Display',serif}
+.pc-desc{font-size:12px;color:var(--muted);line-height:1.5}
+.pc-valid{font-size:10px;color:var(--sl-gold);margin-top:7px}
+.promo-empty{margin:0 18px 18px;padding:16px;background:var(--card);border-radius:14px;border:1px dashed rgba(200,144,58,.2);text-align:center;font-size:12px;color:var(--muted)}
+
+.btn-logout{margin:4px 18px 26px;width:calc(100% - 36px);background:rgba(255,255,255,.04);border:1px solid rgba(200,144,58,.12);border-radius:11px;padding:13px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s}
+.btn-logout:hover{border-color:rgba(200,144,58,.25);color:var(--sl-cream)}
+
+/* ════ BARISTA ════ */
+.code-display{margin:0 18px 14px;background:var(--card);border-radius:16px;padding:18px 20px;border:1px solid rgba(200,144,58,.2)}
+.cd-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+.cd-num-wrap{background:var(--sl-dark);border-radius:12px;padding:18px;text-align:center;border:1px solid rgba(200,144,58,.15)}
+.cd-num{font-family:'Playfair Display',serif;font-size:42px;font-weight:700;color:var(--sl-gold);letter-spacing:10px;display:block;margin-bottom:6px}
+.cd-timer-bar{height:4px;background:rgba(255,255,255,.08);border-radius:100px;overflow:hidden;margin-top:8px}
+.cd-timer-fill{height:100%;background:var(--sl-gold);width:100%;border-radius:100px;transition:width 1s linear}
+.cd-timer-txt{font-size:11px;color:var(--muted);margin-top:8px}
+.cd-timer-txt span{color:var(--sl-gold);font-weight:500}
+.btn-new-code{width:100%;background:#4a2c10;border:1px solid rgba(200,144,58,.2);border-radius:9px;padding:11px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--sl-cream);cursor:pointer;transition:all .2s;margin-top:10px}
+.btn-new-code:hover{background:#553418}
+.promo-editor{margin:0 18px 14px;background:var(--card);border-radius:16px;padding:16px 18px;border:1px solid rgba(200,144,58,.12)}
+.pe-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;display:block}
+.pe-input,.pe-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(200,144,58,.2);border-radius:9px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--sl-cream);outline:none;margin-bottom:10px}
+.pe-input:focus,.pe-textarea:focus{border-color:var(--sl-gold)}
+.pe-input::placeholder,.pe-textarea::placeholder{color:var(--muted);opacity:.5}
+.pe-textarea{resize:none;height:64px}
+.b-stats{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 18px 14px}
+.bstat{background:var(--card);border-radius:13px;padding:14px;text-align:center;border:1px solid rgba(200,144,58,.1)}
+.bstat .num{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--sl-gold);display:block}
+.bstat .lbl{font-size:10px;color:var(--muted);margin-top:2px;display:block}
+.clients-card{margin:0 18px 14px;background:var(--card);border-radius:16px;padding:16px 18px;border:1px solid rgba(200,144,58,.1)}
+.cc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cc-title{font-size:13px;font-weight:500;color:var(--sl-cream)}
+.cc-count{font-size:11px;color:var(--muted)}
+.client-row{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid rgba(200,144,58,.06)}
+.client-row:last-child{border-bottom:none;padding-bottom:0}
+.avatar{width:34px;height:34px;border-radius:50%;background:#4a2c10;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--sl-gold);flex-shrink:0}
+.cr-info{flex:1;min-width:0}
+.cr-name{font-size:13px;font-weight:500;color:var(--sl-cream);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cr-meta{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-stamps{display:flex;gap:3px;margin-top:4px}
+.mini-dot{width:6px;height:6px;border-radius:50%;border:1px solid rgba(200,144,58,.4)}
+.mini-dot.f{background:var(--sl-gold);border-color:var(--sl-gold)}
+.cr-right{text-align:right;flex-shrink:0}
+.cr-pill{font-size:10px;padding:2px 8px;border-radius:100px;background:rgba(200,144,58,.12);color:var(--sl-gold)}
+.cr-since{font-size:10px;color:var(--muted);margin-top:3px}
+.btn-csv{margin:0 18px 14px;width:calc(100% - 36px);background:rgba(138,160,122,.1);border:1px solid rgba(138,160,122,.25);border-radius:10px;padding:12px;font-family:'DM Sans',sans-serif;font-size:13px;color:#b8cba8;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s}
+.btn-csv:hover{background:rgba(138,160,122,.18)}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(6px);width:calc(100% - 36px);max-width:404px;background:#4a2c10;border:1px solid rgba(200,144,58,.3);border-radius:12px;padding:12px 15px;font-size:13px;color:var(--sl-cream);z-index:500;opacity:0;transition:all .3s ease;display:flex;align-items:center;gap:8px;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
 </head>
 <body>
+<div class="app">
+<div class="lov" id="lov"><div class="spin"></div><div class="lmsg" id="lmsg">Cargando...</div></div>
 
-<div class="mode-toggle">
-  <div class="mode-btn active" id="btnModeClient" onclick="setMode('client')"><i class="ti ti-user"></i> Vista cliente</div>
-  <div class="mode-btn" id="btnModeAdmin" onclick="setMode('admin')"><i class="ti ti-tools"></i> Panel barista</div>
-</div>
-
-<!-- CLIENTE -->
-<div id="modeClient">
-
-  <div id="scrRegister" class="screen active">
-    <div class="app-wrapper">
-      <div class="hero">
-        <img src="fotos/bowls.JPG" alt="Bowls artesanales Santa Leña" onerror="this.style.background='#5a2d0c'" />
-        <div class="hero-overlay"><h1>Santa Leña</h1><p>Brunch &amp; Panadería Artesanal</p></div>
-      </div>
-      <div class="card">
-        <h2><i class="ti ti-user-plus"></i> Únete al club</h2>
-        <div id="regAlert"></div>
-        <label>Nombre <span style="color:#c8903a">*</span></label>
-        <input type="text" id="regName" placeholder="Tu nombre" required />
-        <label>Apellido <span style="color:#c8903a">*</span></label>
-        <input type="text" id="regLastName" placeholder="Tu apellido" required />
-        <label>Correo <span style="color:#c8903a">*</span></label>
-        <input type="email" id="regEmail" placeholder="correo@ejemplo.com" required />
-        <label>Teléfono <span style="color:#c8903a">*</span></label>
-        <input type="tel" id="regPhone" placeholder="+56 9 XXXX XXXX" required />
-        <label>Sucursal favorita <span style="color:#c8903a">*</span></label>
-        <select id="regSuc">
-          <option value="">Elige una sucursal</option>
-          <option value="centro">Santa Leña Centro — San Antonio 333</option>
-          <option value="providencia">Santa Leña Providencia — Holanda 100</option>
-        </select>
-        <button class="btn btn-primary" onclick="register()"><i class="ti ti-coffee"></i> Registrarme</button>
-      </div>
-      <div style="text-align:center;font-size:12px;color:var(--text-sec);margin-bottom:1rem;">
-        ¿Ya tienes cuenta? <span style="color:var(--sl-mid);cursor:pointer;" onclick="gotoCard()">Ver mi tarjeta</span>
-      </div>
-    </div>
+<!-- ════ PANTALLA 1 — ELEGIR PERFIL ════ -->
+<div class="screen active" id="choose">
+  <div class="ch-logo">
+    <svg width="54" height="54" viewBox="0 0 90 90" fill="none">
+      <path d="M45 72C30 72 20 60 20 48C20 36 28 30 32 22C34 18 36 14 36 14C38 20 38 24 40 26C40 20 42 16 44 12C46 8 50 6 50 6C50 16 52 20 55 24C57 28 58 32 60 36C62 30 62 26 62 26C64 30 70 36 70 48C70 60 60 72 45 72Z" fill="url(#fg)"/>
+      <circle cx="45" cy="52" r="5" fill="rgba(255,220,150,0.85)"><animate attributeName="r" values="5;7;5" dur="1.6s" repeatCount="indefinite"/></circle>
+      <defs><radialGradient id="fg" cx="50%" cy="80%" r="60%"><stop offset="0%" stop-color="#E8B04A"/><stop offset="45%" stop-color="#c8903a"/><stop offset="100%" stop-color="#8B3A0F"/></radialGradient></defs>
+    </svg>
+    <!-- LOGO: sube tu archivo circular a GitHub con el nombre logo.png y aparece aquí. Si no está, se muestra el texto de abajo. -->
+    <img class="ch-logo-img" src="logo.png" alt="Santa Leña" onerror="this.style.display='none';document.getElementById('brandText').style.display='block'">
   </div>
-
-  <div id="scrCard" class="screen">
-    <div class="app-wrapper">
-      <div class="hero">
-        <img src="fotos/bowls.JPG" alt="Bowls artesanales Santa Leña" onerror="this.style.background='#5a2d0c'" />
-        <div class="hero-overlay"><h1>Santa Leña</h1><p>Brunch &amp; Panadería Artesanal</p></div>
-      </div>
-      <div id="cardAlert" style="padding:0 16px;"></div>
-      <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-          <div>
-            <div style="font-size:15px;font-weight:600;" id="cardName">—</div>
-            <div style="margin-top:4px;"><span id="cardBadge" class="badge"></span></div>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-size:11px;color:var(--text-sec);">Sellos</div>
-            <div style="font-size:20px;font-weight:600;color:var(--sl-brown);" id="cardCount">0/8</div>
-          </div>
-        </div>
-        <div class="stamps-grid" id="stampsGrid"></div>
-        <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
-        <div class="progress-text" id="progressText"></div>
-      </div>
-      <div id="promoClientWrap"></div>
-
-      <!-- google review -->
-      <div id="googleReviewWrap"></div>
-
-      <!-- beneficios -->
-      <div class="benefits">
-        <div class="benefit"><div class="benefit-icon">🍞</div><div class="benefit-text">Pan fresco cada día</div></div>
-        <div class="benefit"><div class="benefit-icon">☕</div><div class="benefit-text">Café de especialidad</div></div>
-        <div class="benefit"><div class="benefit-icon">🤍</div><div class="benefit-text">Atención con cariño</div></div>
-      </div>
-      <div class="card">
-        <h2><i class="ti ti-keyboard"></i> Registrar visita</h2>
-        <p style="font-size:12px;color:var(--text-sec);margin-bottom:10px;">Pídele al barista el código de 4 dígitos e ingrésalo aquí.</p>
-        <div class="code-input-row">
-          <input type="text" id="visitCode" placeholder="0000" maxlength="4" />
-          <button class="btn btn-gold" onclick="redeemCode()"><i class="ti ti-check"></i> Validar</button>
-        </div>
-      </div>
-      <div class="card">
-        <h2><i class="ti ti-map-pin"></i> Encuéntranos</h2>
-        <div class="loc-row">
-          <div class="loc-icon"><i class="ti ti-building-store"></i></div>
-          <div><div style="font-size:13px;font-weight:600;">Santa Leña Centro</div><div style="font-size:12px;color:var(--text-sec);">San Antonio 333, Santiago Centro</div></div>
-        </div>
-        <div class="loc-row">
-          <div class="loc-icon"><i class="ti ti-building-store"></i></div>
-          <div><div style="font-size:13px;font-weight:600;">Santa Leña Providencia</div><div style="font-size:12px;color:var(--text-sec);">Holanda 100, local 110, Providencia</div></div>
-        </div>
-        <div class="social-row">
-          <a class="social-btn" href="https://www.instagram.com/santalenacafe.cl" target="_blank"><i class="ti ti-brand-instagram"></i> Instagram</a>
-          <a class="social-btn" href="https://maps.google.com/?q=San+Antonio+333+Santiago" target="_blank"><i class="ti ti-map-2"></i> Centro</a>
-          <a class="social-btn" href="https://maps.google.com/?q=Holanda+100+Providencia+Santiago" target="_blank"><i class="ti ti-map-2"></i> Providencia</a>
-        </div>
-      </div>
-      <div style="padding:0 16px 1rem;">
-        <button class="btn btn-secondary" onclick="logout()"><i class="ti ti-logout"></i> Cerrar sesión</button>
-      </div>
+  <div class="ch-brand" id="brandText" style="display:none">Santa Leña</div>
+  <div class="ch-tag" style="margin-top:14px">Brunch &amp; Panadería Artesanal</div>
+  <div class="ch-pillars">
+    <div class="ch-pillar"><span style="font-size:14px">🍞</span> Pan fresco cada día</div>
+    <div class="ch-pillar"><span style="font-size:14px">☕</span> Café de especialidad</div>
+    <div class="ch-pillar"><span style="font-size:14px">🤍</span> Atención con cariño</div>
+  </div>
+  <div class="ch-q">¿Cómo quieres ingresar?</div>
+  <div class="ch-options">
+    <div class="ch-opt" onclick="goAuth()">
+      <div class="ch-opt-ico">👤</div>
+      <div class="ch-opt-txt"><div class="ch-opt-name">Soy cliente</div><div class="ch-opt-sub">Acumula sellos y gana cafés gratis</div></div>
+      <span class="ch-opt-arr">›</span>
+    </div>
+    <div class="ch-opt" onclick="requestBarista()">
+      <div class="ch-opt-ico">☕</div>
+      <div class="ch-opt-txt"><div class="ch-opt-name">Soy barista</div><div class="ch-opt-sub">Genera códigos y gestiona clientes</div></div>
+      <span class="ch-opt-arr">›</span>
     </div>
   </div>
 </div>
 
-<!-- ADMIN -->
-<div id="modeAdmin" style="display:none;">
+<!-- ════ PANTALLA 2 — LOGIN / REGISTRO ════ -->
+<div class="screen" id="auth">
+  <div class="auth-inner">
+    <button class="back-btn" onclick="showScreen('choose')">← Volver</button>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="setAuthTab('login')">Iniciar sesión</button>
+      <button class="auth-tab" id="tab-register" onclick="setAuthTab('register')">Registrarme</button>
+    </div>
 
-  <div id="scrAdminLogin" class="screen active">
-    <div class="admin-wrapper">
-      <div class="admin-hero">
-        <img src="fotos/crepes.JPG" alt="Mesa Santa Leña" onerror="this.style.background='#3d1f0a'" />
-        <div class="admin-hero-overlay">
-          <div class="admin-hero-inner">
-            <div><div style="color:var(--sl-cream);font-size:20px;font-weight:600;">Panel barista</div><div style="color:var(--sl-gold);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-top:4px;">Acceso interno Santa Leña</div></div>
-          </div>
-        </div>
+    <!-- LOGIN -->
+    <div id="loginForm">
+      <div class="auth-title">Bienvenido de vuelta</div>
+      <div class="auth-sub">Ingresa con el correo que usaste al registrarte.</div>
+      <div class="ig"><label>Correo electrónico</label><input type="email" id="login-email" placeholder="tu@correo.cl"></div>
+      <div class="auth-err" id="loginErr"></div>
+      <button class="btn" onclick="loginClient()">Entrar a mi tarjeta</button>
+    </div>
+
+    <!-- REGISTRO -->
+    <div id="registerForm" style="display:none">
+      <div class="auth-title">Únete al Club</div>
+      <div class="auth-sub">Crea tu tarjeta digital y empieza a acumular sellos.</div>
+      <div class="ig row2">
+        <div><label>Nombre *</label><input type="text" id="reg-nombre" placeholder="Juan Pablo"></div>
+        <div><label>Apellido *</label><input type="text" id="reg-apellido" placeholder="Espinosa"></div>
       </div>
-      <div class="card" style="max-width:400px;margin:0 auto 16px;">
-        <h2><i class="ti ti-lock"></i> Ingresar</h2>
-        <div id="adminLoginAlert"></div>
-        <label>Sucursal</label>
-        <select id="adminSucSel"><option value="centro">Santa Leña Centro</option><option value="providencia">Santa Leña Providencia</option></select>
-        <label>Contraseña</label>
-        <input type="password" id="adminPass" placeholder="Contraseña" />
-        <button class="btn btn-primary" onclick="adminLogin()"><i class="ti ti-door-enter"></i> Ingresar al panel</button>
+      <div class="ig"><label>Correo electrónico *</label><input type="email" id="reg-email" placeholder="tu@correo.cl"></div>
+      <div class="ig"><label>Teléfono *</label><input type="tel" id="reg-tel" placeholder="+56 9 0000 0000"></div>
+      <span class="suc-label">Tu sucursal *</span>
+      <div class="suc-pick">
+        <div class="sp-opt active" id="sp-c" onclick="pickSuc('centro')"><div class="sp-dot"></div><div class="sp-name">Centro</div><div class="sp-addr">San Antonio 333</div></div>
+        <div class="sp-opt" id="sp-p" onclick="pickSuc('providencia')"><div class="sp-dot"></div><div class="sp-name">Providencia</div><div class="sp-addr">Holanda 100</div></div>
       </div>
+
+      <!-- CONSENTIMIENTO DE DATOS (obligatorio) -->
+      <label class="consent">
+        <input type="checkbox" id="consent-data">
+        <span class="consent-txt">Autorizo a Santa Leña a usar mis datos para enviarme <strong style="color:var(--sl-cream);font-weight:500">promociones y novedades</strong>, y acepto los <a href="#">términos</a> y la <a href="#">política de privacidad</a>. <span class="req">*</span></span>
+      </label>
+
+      <div class="auth-err" id="regErr"></div>
+      <button class="btn" onclick="registerClient()">Crear mi tarjeta</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PANTALLA 3 — CLIENTE ════ -->
+<div class="screen" id="clientApp">
+  <div class="head">
+    <div class="head-logo">Santa Leña <span class="head-dot"></span></div>
+    <button class="head-exit" onclick="logout()">↪ Salir</button>
+  </div>
+
+  <!-- ¿En qué sucursal estás hoy? -->
+  <div class="suc-bar">
+    <div class="suc-bar-label">📍 ¿En qué sucursal estás hoy?</div>
+    <div class="suc-bar-opts">
+      <div class="sp-opt" id="visit-c" onclick="setVisitSuc('centro')"><div class="sp-dot"></div><div class="sp-name">Centro</div><div class="sp-addr">San Antonio 333</div></div>
+      <div class="sp-opt active" id="visit-p" onclick="setVisitSuc('providencia')"><div class="sp-dot"></div><div class="sp-name">Providencia</div><div class="sp-addr">Holanda 100</div></div>
     </div>
   </div>
 
-  <div id="scrAdminPanel" class="screen">
-    <div class="admin-wrapper">
-      <div class="admin-hero">
-        <img src="fotos/crepes.JPG" alt="Mesa Santa Leña" onerror="this.style.background='#3d1f0a'" />
-        <div class="admin-hero-overlay">
-          <div class="admin-hero-inner">
-            <div><div style="color:var(--sl-cream);font-size:20px;font-weight:600;">Panel barista</div><div style="color:var(--sl-gold);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-top:4px;" id="adminSucLabel">—</div></div>
-            <button class="btn btn-sm" style="background:rgba(253,246,236,0.15);color:var(--sl-cream);border:0.5px solid rgba(253,246,236,0.3);" onclick="adminLogout()"><i class="ti ti-logout"></i> Salir</button>
-          </div>
-        </div>
+  <!-- Tarjeta -->
+  <div class="card">
+    <div class="lc-top">
+      <div><div class="lc-name" id="cardName">—</div><div class="lc-suc-pill" id="cardSuc">Centro</div></div>
+      <div><div class="lc-sellos-lbl">Sellos</div><div class="lc-sellos-num"><span id="cardSellos">0</span>/8</div></div>
+    </div>
+    <div class="stamp-grid" id="stampGrid"></div>
+    <div class="lc-progress"><div class="lc-progress-fill" id="progFill" style="width:0%"></div></div>
+    <div class="lc-next" id="nextLbl">8 cafés más para el gratis</div>
+    <div class="lc-free" id="freePill">🎁 <span id="freeMsg"></span></div>
+  </div>
+
+  <!-- Valida tu visita -->
+  <div class="card">
+    <div class="card-head"><div class="card-ico">🎫</div><span class="card-title">Valida tu visita</span></div>
+    <p class="card-desc">Pídele al barista el código de 4 dígitos e ingrésalo aquí.</p>
+    <div class="code-row">
+      <div class="bean-circle">
+        <svg width="32" height="38" viewBox="0 0 34 40" fill="none">
+          <ellipse cx="17" cy="20" rx="15" ry="19" fill="#3a2008" stroke="#c8903a" stroke-width="1.5"/>
+          <path d="M17 3C13 9 13 14 17 20C21 26 21 31 17 37" stroke="#c8903a" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        </svg>
       </div>
-      <div class="tab-bar">
-        <div class="tab active" id="tabCode" onclick="adminTab('code')"><i class="ti ti-qrcode"></i> Código</div>
-        <div class="tab" id="tabPromo" onclick="adminTab('promo')"><i class="ti ti-speakerphone"></i> Promoción</div>
-        <div class="tab" id="tabClients" onclick="adminTab('clients')"><i class="ti ti-users"></i> Clientes</div>
-      </div>
-      <div id="adminTabCode">
-        <div class="card">
-          <h2><i class="ti ti-refresh"></i> Código de visita</h2>
-          <p style="font-size:13px;color:var(--text-sec);margin-bottom:1.25rem;">Genera un código temporal y díselo al cliente para registrar su visita.</p>
-          <div id="codeBox" style="display:none;margin-bottom:1rem;">
-            <div class="code-display">
-              <div style="font-size:10px;color:var(--sl-mid);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">Código activo</div>
-              <div class="code-num" id="genCode">—</div>
-              <div class="timer-bar-wrap"><div class="timer-bar" id="timerBar" style="width:100%"></div></div>
-              <div class="timer-text" id="codeTimer">Válido por 2:00 min</div>
-            </div>
-          </div>
-          <button class="btn btn-primary" onclick="generateCode()"><i class="ti ti-refresh"></i> Generar código nuevo</button>
+      <div class="code-mid">
+        <div class="code-boxes">
+          <input class="cb" id="c1" type="number" min="0" max="9" inputmode="numeric" placeholder="0" oninput="ci(this,'c2')" onkeydown="ck(event,this,'')">
+          <input class="cb" id="c2" type="number" min="0" max="9" inputmode="numeric" placeholder="0" oninput="ci(this,'c3')" onkeydown="ck(event,this,'c1')">
+          <input class="cb" id="c3" type="number" min="0" max="9" inputmode="numeric" placeholder="0" oninput="ci(this,'c4')" onkeydown="ck(event,this,'c2')">
+          <input class="cb" id="c4" type="number" min="0" max="9" inputmode="numeric" placeholder="0" oninput="ci(this,'')" onkeydown="ck(event,this,'c3')">
         </div>
-      </div>
-      <div id="adminTabPromo" style="display:none;">
-        <div class="card">
-          <h2><i class="ti ti-speakerphone"></i> Promoción del mes</h2>
-          <p style="font-size:13px;color:var(--text-sec);margin-bottom:1.25rem;">Lo que escribas aquí aparecerá en la tarjeta del cliente al instante.</p>
-          <div class="switch-row">
-            <span class="switch-label">Mostrar promoción a clientes</span>
-            <label class="toggle"><input type="checkbox" id="promoActive" /><span class="slider"></span></label>
-          </div>
-          <label>Título</label>
-          <input type="text" id="promoTitle" placeholder="Ej: 2x1 en lattes los martes" oninput="previewPromo()" />
-          <label>Descripción</label>
-          <textarea id="promoDesc" placeholder="Ej: Durante todo mayo, pide un latte y te regalamos otro." oninput="previewPromo()"></textarea>
-          <label>Válido hasta</label>
-          <input type="text" id="promoValidity" placeholder="Ej: 31 de mayo de 2026" oninput="previewPromo()" />
-          <div class="promo-preview"><div class="lbl">Vista previa</div><div id="promoPreviewBox"></div></div>
-          <button class="btn btn-primary" style="margin-top:1rem;" onclick="savePromo()"><i class="ti ti-device-floppy"></i> Guardar y publicar</button>
-          <div id="promoSaveAlert" style="margin-top:8px;"></div>
-        </div>
-      </div>
-      <div id="adminTabClients" style="display:none;">
-        <div class="stat-grid" id="statGrid"></div>
-        <div class="card">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-            <h2 style="margin-bottom:0;"><i class="ti ti-users"></i> Clientes registrados</h2>
-            <button class="btn btn-secondary btn-sm" onclick="exportCSV()"><i class="ti ti-download"></i> Exportar CSV</button>
-          </div>
-          <div id="clientList"></div>
-        </div>
+        <button class="btn" id="btnVal" onclick="validateCode()" disabled>✓ Validar visita</button>
       </div>
     </div>
+    <div class="alert-box ab-success" id="valOk"><span style="font-size:18px">🔥</span><div class="ab-txt"><strong>¡Sello sumado!</strong><span id="valOkMsg"></span></div></div>
+    <div class="alert-box ab-error" id="valErr"><span style="font-size:18px">⚠️</span><div class="ab-txt"><strong>Código incorrecto</strong><span id="valErrMsg"></span></div></div>
   </div>
+
+  <!-- Calificación -->
+  <div class="rating-reveal" id="ratingReveal">
+    <div class="rating-inner">
+      <div class="ri-top"><div class="g-badge"><span class="g-letter">G</span></div><span class="ri-title">¿Te gustó tu visita en <strong id="rBranch">Providencia</strong>?</span></div>
+      <p class="ri-sub">Tu opinión nos ayuda a crecer. ¡Toma solo 1 minuto!</p>
+      <div class="stars-row">
+        <button class="star" id="s1" onclick="rateStar(1)">⭐</button>
+        <button class="star" id="s2" onclick="rateStar(2)">⭐</button>
+        <button class="star" id="s3" onclick="rateStar(3)">⭐</button>
+        <button class="star" id="s4" onclick="rateStar(4)">⭐</button>
+        <button class="star" id="s5" onclick="rateStar(5)">⭐</button>
+      </div>
+      <button class="btn-opinar" id="btnOpinar" onclick="openGoogle()" disabled>Opinar en Google →</button>
+    </div>
+  </div>
+
+  <!-- Promociones -->
+  <div class="sh"><span class="sh-t">Promociones</span></div>
+  <div id="promosContainer"></div>
+
+  <!-- Encuéntranos -->
+  <div class="card">
+    <div class="card-head"><div class="card-ico">📍</div><span class="card-title">Encuéntranos</span></div>
+    <a class="fl" href="https://www.instagram.com/santalenacafe.cl" target="_blank">
+      <div class="fl-ico fi-ig">📸</div><div class="fl-txt"><div class="fl-name">Instagram</div><div class="fl-sub">@santalenacafe.cl</div></div><span class="fl-arr">›</span>
+    </a>
+    <a class="fl" href="https://maps.google.com/?q=Santa+Leña+San+Antonio+333+Santiago" target="_blank">
+      <div class="fl-ico fi-gm">🗺️</div><div class="fl-txt"><div class="fl-name">Santa Leña Centro</div><div class="fl-sub">San Antonio 333, Santiago Centro</div></div><span class="fl-arr">›</span>
+    </a>
+    <a class="fl" href="https://maps.google.com/?q=Santa+Leña+Holanda+100+Providencia" target="_blank">
+      <div class="fl-ico fi-gm">🗺️</div><div class="fl-txt"><div class="fl-name">Santa Leña Providencia</div><div class="fl-sub">Holanda 100, local 110, Providencia</div></div><span class="fl-arr">›</span>
+    </a>
+  </div>
+
+  <button class="btn-logout" onclick="logout()">↪ Cerrar sesión</button>
+</div>
+
+<!-- ════ PANTALLA 4 — BARISTA ════ -->
+<div class="screen" id="baristaApp">
+  <div class="head">
+    <div class="head-logo">Panel barista <span class="head-dot"></span></div>
+    <button class="head-exit" onclick="logout()">↪ Salir</button>
+  </div>
+
+  <div class="suc-bar">
+    <div class="suc-bar-label">📍 Sucursal del turno</div>
+    <div class="suc-bar-opts">
+      <div class="sp-opt" id="bsuc-c" onclick="setBaristaSuc('centro')"><div class="sp-dot"></div><div class="sp-name">Centro</div><div class="sp-addr">San Antonio 333</div></div>
+      <div class="sp-opt active" id="bsuc-p" onclick="setBaristaSuc('providencia')"><div class="sp-dot"></div><div class="sp-name">Providencia</div><div class="sp-addr">Holanda 100</div></div>
+    </div>
+  </div>
+
+  <div class="code-display">
+    <div class="cd-label">Código de visita · muéstralo al cliente</div>
+    <div class="cd-num-wrap">
+      <span class="cd-num" id="bCode">— — — —</span>
+      <div class="cd-timer-bar"><div class="cd-timer-fill" id="bTimerFill"></div></div>
+      <div class="cd-timer-txt">Expira en <span id="bTimer">—</span></div>
+    </div>
+    <button class="btn-new-code" onclick="generateCode()">↺ Generar nuevo código</button>
+  </div>
+
+  <div class="sh"><span class="sh-t">Promoción del mes</span></div>
+  <div class="promo-editor">
+    <label class="pe-label">Título</label>
+    <input class="pe-input" id="pe-titulo" placeholder="Ej: 2×1 en croissants" maxlength="50">
+    <label class="pe-label">Descripción</label>
+    <textarea class="pe-textarea" id="pe-desc" placeholder="Ej: Martes y miércoles antes de las 11 AM"></textarea>
+    <label class="pe-label">Validez</label>
+    <input class="pe-input" id="pe-valid" placeholder="Ej: Válido hasta el domingo" maxlength="50">
+    <button class="btn" onclick="savePromo()">Guardar promoción</button>
+  </div>
+
+  <div class="b-stats">
+    <div class="bstat"><span class="num" id="bClientesCount">0</span><span class="lbl">Clientes inscritos</span></div>
+    <div class="bstat"><span class="num" id="bSellosCount">0</span><span class="lbl">Sellos esta sucursal</span></div>
+  </div>
+
+  <div class="clients-card">
+    <div class="cc-head"><span class="cc-title">Clientes inscritos</span><span class="cc-count" id="ccCount">—</span></div>
+    <div id="clientsList"><div style="font-size:12px;color:var(--muted);text-align:center;padding:8px">Cargando...</div></div>
+  </div>
+
+  <button class="btn-csv" onclick="exportCSV()">📥 Exportar base de clientes (CSV)</button>
+  <button class="btn-logout" onclick="logout()">↪ Salir del panel</button>
+</div>
+
+<div class="toast" id="toast"><span id="ticon">🔥</span> <span id="tmsg">¡Listo!</span></div>
 </div>
 
 <script>
-  const ADMIN_PASSWORD = '1234';
-  const SUPABASE_URL   = 'https://bnugefcqfstbytayeblg.supabase.co';
-  const SUPABASE_KEY   = 'sb_publishable_pDKGyRZkISJ1abDCw_ZWTw_lvPHWN0W';
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const { createClient } = supabase;
+const sb = createClient(
+  'https://bnugefcqfstbytayeblg.supabase.co',
+  'sb_publishable_pDKGyRZkISJ1abDCw_ZWTw_lvPHWN0W'
+);
 
-  const GOOGLE_REVIEW = {
-    centro:      'https://g.page/r/CUtGtTE8OEhWEAE/review',
-    providencia: 'https://g.page/r/CfQgXAMP0qFuEAE/review'
-  };
+let currentClient = null;
+let regSucSel = 'centro';
+let visitSuc = 'providencia';
+let baristaSuc = 'providencia';
+let curStar = 0;
+let bTimerInterval = null;
 
-  
-  let promo = { activa:false, titulo:'', descripcion:'', validez:'' };
-  let adminSuc = 'centro';
-  let codeTimer = null, activeCode = null, codeExpiry = null;
+const GOOGLE_URLS = {
+  centro:      'https://g.page/r/CUtGtTE8OEhWEAE/review',
+  providencia: 'https://g.page/r/CfQgXAMP0qFuEAE/review'
+};
+const BARISTA_PASS = '1234';
 
-  function saveCur() { localStorage.setItem('sl_current', JSON.stringify(currentClient)); }
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+function loading(s,m='Cargando...'){document.getElementById('lmsg').textContent=m;document.getElementById('lov').classList.toggle('show',s);}
+let tTimer;
+function toast(m){const t=document.getElementById('toast');document.getElementById('tmsg').textContent=m;t.classList.add('show');clearTimeout(tTimer);tTimer=setTimeout(()=>t.classList.remove('show'),3200);}
+function saveCur(){if(currentClient)localStorage.setItem('sl_email',currentClient.email);}
+function esc(s){return (s||'').replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));}
 
-  function setMode(m) {
-    document.getElementById('modeClient').style.display = m==='client'?'':'none';
-    document.getElementById('modeAdmin').style.display  = m==='admin'?'':'none';
-    document.getElementById('btnModeClient').classList.toggle('active', m==='client');
-    document.getElementById('btnModeAdmin').classList.toggle('active',  m==='admin');
-    if (m==='client') { currentClient?(showScreen('scrCard'),renderCard()):showScreen('scrRegister'); }
-    else showAdminScreen('scrAdminLogin');
-  }
-  function showScreen(id) {
-    document.querySelectorAll('#modeClient .screen').forEach(s=>s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-  }
-  function showAdminScreen(id) {
-    document.querySelectorAll('#modeAdmin .screen').forEach(s=>s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-  }
-  function alertMsg(elId, msg, type) {
-    const el=document.getElementById(elId);
-    el.innerHTML=`<div class="alert alert-${type}">${msg}</div>`;
-    setTimeout(()=>{el.innerHTML='';},3500);
-  }
-  function gotoCard() { if(currentClient){renderCard();showScreen('scrCard');} }
+function goAuth(){showScreen('auth');setAuthTab('login');}
+function setAuthTab(t){
+  document.getElementById('tab-login').classList.toggle('active',t==='login');
+  document.getElementById('tab-register').classList.toggle('active',t==='register');
+  document.getElementById('loginForm').style.display=t==='login'?'block':'none';
+  document.getElementById('registerForm').style.display=t==='register'?'block':'none';
+}
 
-  async function register() {
-    const nombre   = (document.getElementById('regName').value.trim()+' '+document.getElementById('regLastName').value.trim()).trim();
-    const email    = document.getElementById('regEmail').value.trim();
-    const telefono = document.getElementById('regPhone').value.trim();
-    const sucursal = document.getElementById('regSuc').value;
-    if (!nombre||!email||!telefono||!sucursal) {
-      alertMsg('regAlert','Completa todos los campos obligatorios.','error'); return;
-    }
-    const {data:existing} = await sb.from('clientes').select('*').eq('email',email).maybeSingle();
-    if (existing) { currentClient=existing; saveCur(); renderCard(); showScreen('scrCard'); return; }
-    const {data,error} = await sb.from('clientes').insert([{nombre,email,telefono,sucursal,sellos:0,gratis:0}]).select().single();
-    if (error) { alertMsg('regAlert','Error al registrar. Intenta de nuevo.','error'); return; }
-    currentClient=data; saveCur(); renderCard(); showScreen('scrCard');
-  }
+async function loginClient(){
+  const email=document.getElementById('login-email').value.trim().toLowerCase();
+  const err=document.getElementById('loginErr');err.textContent='';
+  if(!email||!email.includes('@')){err.textContent='Ingresa un correo válido.';return;}
+  loading(true,'Buscando tu cuenta...');
+  const {data}=await sb.from('clientes').select('*').eq('email',email).maybeSingle();
+  loading(false);
+  if(!data){err.textContent='No encontramos ese correo. Regístrate primero.';return;}
+  currentClient=data;saveCur();openClient();toast('¡Bienvenido de vuelta, '+data.nombre+'!');
+}
 
-  function renderCard() {
-    if (!currentClient) return;
-    document.getElementById('cardName').textContent = currentClient.nombre;
-    const b=document.getElementById('cardBadge');
-    b.textContent=currentClient.sucursal==='centro'?'Centro':'Providencia';
-    b.className='badge '+(currentClient.sucursal==='centro'?'badge-centro':'badge-prov');
-    document.getElementById('cardCount').textContent=`${currentClient.sellos}/8`;
-    const grid=document.getElementById('stampsGrid'); grid.innerHTML='';
-    for(let i=0;i<8;i++){const s=document.createElement('div');s.className='stamp '+(i<currentClient.sellos?'filled':'empty');grid.appendChild(s);}
-    document.getElementById('progressBar').style.width=Math.round((currentClient.sellos/8)*100)+'%';
-    const left=8-currentClient.sellos;
-    document.getElementById('progressText').textContent=
-      currentClient.sellos>=8?'¡Tienes un café gratis! Muéstraselo al barista 🎁':`${left} café${left!==1?'s':''} más para el gratis`;
-    renderPromoClient();
-    renderGoogleReview();
-  }
+function pickSuc(s){regSucSel=s;document.getElementById('sp-c').classList.toggle('active',s==='centro');document.getElementById('sp-p').classList.toggle('active',s==='providencia');}
+async function registerClient(){
+  const nombre=document.getElementById('reg-nombre').value.trim();
+  const apellido=document.getElementById('reg-apellido').value.trim();
+  const email=document.getElementById('reg-email').value.trim().toLowerCase();
+  const telefono=document.getElementById('reg-tel').value.trim();
+  const acepta=document.getElementById('consent-data').checked;
+  const err=document.getElementById('regErr');err.textContent='';
+  if(!nombre){err.textContent='Ingresa tu nombre.';return;}
+  if(!apellido){err.textContent='Ingresa tu apellido.';return;}
+  if(!email||!email.includes('@')){err.textContent='Ingresa un correo válido.';return;}
+  if(!telefono){err.textContent='Ingresa tu teléfono.';return;}
+  if(!acepta){err.textContent='Debes autorizar el uso de tus datos para continuar.';return;}
+  loading(true,'Creando tu tarjeta...');
+  const {data:exist}=await sb.from('clientes').select('*').eq('email',email).maybeSingle();
+  if(exist){loading(false);currentClient=exist;saveCur();openClient();toast('¡Ya tenías cuenta! Bienvenido, '+exist.nombre);return;}
+  const {data,error}=await sb.from('clientes').insert({nombre,apellido,email,telefono,sucursal:regSucSel,sellos:0,gratis:0,acepta_promos:true}).select().single();
+  loading(false);
+  if(error){err.textContent='Error al registrar. Revisa los datos.';console.error(error);return;}
+  currentClient=data;saveCur();openClient();toast('¡Bienvenido al Club Santa Leña! 🎉');
+}
 
-  function renderGoogleReview() {
-    if(!currentClient) return;
-    const url = GOOGLE_REVIEW[currentClient.sucursal];
-    const suc = currentClient.sucursal==='centro'?'Santiago Centro':'Providencia';
-    document.getElementById('googleReviewWrap').innerHTML = `
-      <div class="review-card">
-        <div class="review-header">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-          <span>¿Te gustó tu visita en ${suc}?</span>
-        </div>
-        <div class="review-body">
-          <div>
-            <div class="review-stars">★★★★★</div>
-            <div class="review-text">Tu opinión nos ayuda a crecer. ¡Toma solo 1 minuto!</div>
-          </div>
-          <a class="review-btn" href="${url}" target="_blank"><i class="ti ti-star"></i> Opinar</a>
-        </div>
-      </div>`;
-  }
+function openClient(){
+  visitSuc=currentClient.sucursal||'providencia';
+  setVisitSuc(visitSuc,false);
+  renderCard();loadPromos();showScreen('clientApp');
+}
+function logout(){localStorage.removeItem('sl_email');currentClient=null;clearInterval(bTimerInterval);showScreen('choose');toast('Sesión cerrada');}
 
-  async function redeemCode() {
-    const input=document.getElementById('visitCode').value.trim();
-    if (!activeCode||!codeExpiry){alertMsg('cardAlert','No hay código activo. Pídelo al barista.','error');return;}
-    if (Date.now()>codeExpiry){alertMsg('cardAlert','El código expiró. Pide uno nuevo.','error');activeCode=null;return;}
-    if (input!==activeCode){alertMsg('cardAlert','Código incorrecto. Inténtalo de nuevo.','error');return;}
-    const newSellos = currentClient.sellos>=8?0:currentClient.sellos+1;
-    const newGratis = currentClient.sellos>=8?(currentClient.gratis||0)+1:currentClient.gratis;
-    const {data,error} = await sb.from('clientes').update({sellos:newSellos,gratis:newGratis}).eq('id',currentClient.id).select().single();
-    if (error){alertMsg('cardAlert','Error al guardar. Intenta de nuevo.','error');return;}
-    currentClient=data; saveCur();
-    document.getElementById('visitCode').value=''; activeCode=null;
-    renderCard(); alertMsg('cardAlert','¡Sello registrado! ☕ Gracias por visitarnos.','success');
-  }
+function setVisitSuc(s,notify=true){
+  visitSuc=s;
+  document.getElementById('visit-c').classList.toggle('active',s==='centro');
+  document.getElementById('visit-p').classList.toggle('active',s==='providencia');
+  document.getElementById('rBranch').textContent=s==='centro'?'Centro':'Providencia';
+  if(notify)toast('Visitando: Santa Leña '+(s==='centro'?'Centro':'Providencia'));
+}
 
-  function logout(){currentClient=null;localStorage.removeItem('sl_current');showScreen('scrRegister');}
+function renderCard(){
+  if(!currentClient)return;
+  const c=currentClient, s=c.sellos||0, g=c.gratis||0;
+  document.getElementById('cardName').textContent=c.nombre+' '+(c.apellido||'');
+  document.getElementById('cardSuc').textContent=c.sucursal==='centro'?'Centro':'Providencia';
+  document.getElementById('cardSellos').textContent=s;
+  const grid=document.getElementById('stampGrid');grid.innerHTML='';
+  for(let i=0;i<8;i++){
+    const d=document.createElement('div');d.className='stamp '+(i<s?'filled':'');
+    if(i<s)d.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" fill="none"><path d="M12 3C12 3 10 8 6 10C6 10 8 15 12 15C16 15 18 10 18 10C14 8 12 3 12 3Z" fill="#c8903a"/><circle cx="12" cy="17" r="3" fill="#c8903a"/></svg>';
+    grid.appendChild(d);
+  }
+  document.getElementById('progFill').style.width=(s/8*100)+'%';
+  const rem=8-s;
+  document.getElementById('nextLbl').textContent=rem>0?(rem+' café'+(rem>1?'s':'')+' más para el gratis'):'¡Completaste tu tarjeta!';
+  const fp=document.getElementById('freePill');
+  if(g>0){fp.classList.add('show');document.getElementById('freeMsg').textContent='Tienes '+g+' café'+(g>1?'s':'')+' gratis pendiente'+(g>1?'s':'');}
+  else fp.classList.remove('show');
+}
 
-  function adminLogin(){
-    const pass=document.getElementById('adminPass').value;
-    adminSuc=document.getElementById('adminSucSel').value;
-    if(pass!==ADMIN_PASSWORD){alertMsg('adminLoginAlert','Contraseña incorrecta.','error');return;}
-    document.getElementById('adminSucLabel').textContent=adminSuc==='centro'?'Santa Leña Centro':'Santa Leña Providencia';
-    showAdminScreen('scrAdminPanel'); adminTab('code');
-  }
-  function adminLogout(){if(codeTimer)clearInterval(codeTimer);activeCode=null;showAdminScreen('scrAdminLogin');}
+function ci(el,nid){const v=el.value.toString().slice(-1);el.value=v;el.classList.toggle('has',v!=='');if(v!==''&&nid)document.getElementById(nid).focus();document.getElementById('btnVal').disabled=!['c1','c2','c3','c4'].every(id=>document.getElementById(id).value!=='');}
+function ck(e,el,pid){if(e.key==='Backspace'&&el.value===''&&pid)document.getElementById(pid).focus();}
 
-  function adminTab(t){
-    ['Code','Promo','Clients'].forEach(x=>{
-      document.getElementById('tab'+x).classList.toggle('active',t===x.toLowerCase());
-      document.getElementById('adminTab'+x).style.display=t===x.toLowerCase()?'':'none';
-    });
-    if(t==='promo')   loadPromoEditor();
-    if(t==='clients') renderClientList();
-  }
+async function validateCode(){
+  const input=['c1','c2','c3','c4'].map(id=>document.getElementById(id).value).join('');
+  document.getElementById('valOk').classList.remove('show');
+  document.getElementById('valErr').classList.remove('show');
+  document.getElementById('btnVal').disabled=true;
+  loading(true,'Validando...');
+  const {data:rows}=await sb.from('codigos').select('*').eq('sucursal',visitSuc).order('created_at',{ascending:false}).limit(1);
+  loading(false);
+  if(!rows||!rows.length){showErr('No hay código activo en esta sucursal. Pídelo al barista.');return;}
+  const row=rows[0];
+  if(Math.floor(Date.now()/1000)>row.expira_en){showErr('El código expiró. Pide uno nuevo.');return;}
+  if(input!==row.codigo){showErr('Código incorrecto. Verifica con el barista.');return;}
+  const sellosActual=currentClient.sellos||0;
+  let finalSellos,newGratis=currentClient.gratis||0,full=false;
+  if(sellosActual+1>=8){finalSellos=0;newGratis++;full=true;}else{finalSellos=sellosActual+1;}
+  const {data,error}=await sb.from('clientes').update({sellos:finalSellos,gratis:newGratis}).eq('id',currentClient.id).select().single();
+  if(error){showErr('Error al guardar. Intenta de nuevo.');return;}
+  currentClient=data;saveCur();renderCard();
+  ['c1','c2','c3','c4'].forEach(id=>{const e=document.getElementById(id);e.value='';e.classList.remove('has');});
+  document.getElementById('valOkMsg').textContent=full?'¡Completaste 8 sellos! Ganaste un café gratis 🎉':('Ahora tienes '+currentClient.sellos+' de 8.');
+  document.getElementById('valOk').classList.add('show');
+  const rr=document.getElementById('ratingReveal');rr.classList.add('show');
+  curStar=0;[1,2,3,4,5].forEach(n=>document.getElementById('s'+n).classList.remove('on'));
+  document.getElementById('btnOpinar').disabled=true;document.getElementById('btnOpinar').textContent='Opinar en Google →';document.getElementById('btnOpinar').classList.remove('done');
+  setTimeout(()=>rr.scrollIntoView({behavior:'smooth',block:'center'}),200);
+  toast('🔥 ¡Sello sumado!');
+}
+function showErr(m){document.getElementById('valErrMsg').textContent=m;document.getElementById('valErr').classList.add('show');document.getElementById('btnVal').disabled=false;}
 
-  async function generateCode(){
-    if(codeTimer)clearInterval(codeTimer);
-    const codigo=String(Math.floor(1000+Math.random()*9000));
-    const expira_en=Date.now()+120000;
-    // Guardar en Supabase
-    await sb.from('codigos').delete().eq('sucursal',adminSuc);
-    await sb.from('codigos').insert([{codigo,sucursal:adminSuc,expira_en}]);
-    activeCode=codigo; codeExpiry=expira_en;
-    document.getElementById('genCode').textContent=codigo;
-    document.getElementById('codeBox').style.display='';
-    let secs=120; tick(secs);
-    codeTimer=setInterval(()=>{
-      secs--;
-      if(secs<=0){clearInterval(codeTimer);document.getElementById('codeTimer').textContent='Código expirado';document.getElementById('timerBar').style.width='0%';activeCode=null;}
-      else tick(secs);
-    },1000);
-  }
-  function tick(s){
-    const m=Math.floor(s/60),sec=s%60;
-    document.getElementById('codeTimer').textContent=`Válido por ${m}:${String(sec).padStart(2,'0')} min`;
-    document.getElementById('timerBar').style.width=Math.round((s/120)*100)+'%';
-  }
+function rateStar(n){curStar=n;[1,2,3,4,5].forEach(i=>document.getElementById('s'+i).classList.toggle('on',i<=n));document.getElementById('btnOpinar').disabled=false;}
+function openGoogle(){window.open(GOOGLE_URLS[visitSuc],'_blank');document.getElementById('btnOpinar').textContent='¡Gracias por tu opinión! 🙌';document.getElementById('btnOpinar').classList.add('done');toast('¡Gracias por calificarnos! ⭐');}
 
-  function buildPromoHTML(p){
-    if(!p||!p.activa||!p.titulo) return '';
-    return `<div class="promo-card">
-      <div class="promo-header"><i class="ti ti-speakerphone" style="color:var(--sl-gold);font-size:16px;"></i><span>Promoción del mes</span><div style="flex:1;"></div><div class="promo-badge-active">Activo</div></div>
-      <div class="promo-body">
-        <div class="promo-title">${p.titulo}</div>
-        <div class="promo-desc">${p.descripcion||''}</div>
-        ${p.validez?`<div class="promo-validity"><i class="ti ti-calendar" style="font-size:13px;"></i> Válido hasta el ${p.validez}</div>`:''}
-      </div></div>`;
-  }
-  function renderPromoClient(){
-    const wrap=document.getElementById('promoClientWrap');
-    if(wrap) wrap.innerHTML=buildPromoHTML(promo);
-  }
+async function loadPromos(){
+  const {data}=await sb.from('promo').select('*').eq('activa',true).order('id',{ascending:false});
+  const cont=document.getElementById('promosContainer');
+  if(!data||!data.length){cont.innerHTML='<div class="promo-empty">Pronto tendremos nuevas promociones para ti ☕</div>';return;}
+  cont.innerHTML='<div class="promos-scr">'+data.map(p=>`<div class="pc"><div class="pc-body"><span class="pc-tag">Vigente</span><div class="pc-name">${esc(p.titulo)}</div><div class="pc-desc">${esc(p.descripcion||'')}</div>${p.validez?`<div class="pc-valid">${esc(p.validez)}</div>`:''}</div></div>`).join('')+'</div>';
+}
 
-  function previewPromo(){
-    const p={activa:true,titulo:document.getElementById('promoTitle').value.trim(),descripcion:document.getElementById('promoDesc').value.trim(),validez:document.getElementById('promoValidity').value.trim()};
-    document.getElementById('promoPreviewBox').innerHTML=p.titulo?buildPromoHTML(p):'<div style="font-size:12px;color:var(--text-sec);padding:8px 0;">Escribe un título para ver la vista previa.</div>';
-  }
+function requestBarista(){const p=prompt('Contraseña del barista:');if(p===BARISTA_PASS){openBarista();}else if(p!==null)toast('Contraseña incorrecta');}
+function openBarista(){showScreen('baristaApp');loadBaristaCode();loadClients();loadPromoEditor();toast('Panel barista activo ☕');}
 
-  async function savePromo(){
-    const data={activa:document.getElementById('promoActive').checked,titulo:document.getElementById('promoTitle').value.trim(),descripcion:document.getElementById('promoDesc').value.trim(),validez:document.getElementById('promoValidity').value.trim()};
-    let error;
-    if(promo&&promo.id){({error}=await sb.from('promo').update(data).eq('id',promo.id));}
-    else{const res=await sb.from('promo').insert([data]).select().single();if(res.data)promo=res.data;error=res.error;}
-    if(error){alertMsg('promoSaveAlert','Error al guardar.','error');return;}
-    promo={...promo,...data};
-    renderPromoClient();
-    alertMsg('promoSaveAlert','¡Promoción publicada! Los clientes ya pueden verla.','success');
-  }
+function setBaristaSuc(s){
+  baristaSuc=s;
+  document.getElementById('bsuc-c').classList.toggle('active',s==='centro');
+  document.getElementById('bsuc-p').classList.toggle('active',s==='providencia');
+  loadBaristaCode();loadClients();
+}
 
-  function loadPromoEditor(){
-    document.getElementById('promoActive').checked=promo.activa||false;
-    document.getElementById('promoTitle').value=promo.titulo||'';
-    document.getElementById('promoDesc').value=promo.descripcion||'';
-    document.getElementById('promoValidity').value=promo.validez||'';
-    previewPromo();
-  }
+async function loadBaristaCode(){
+  const {data}=await sb.from('codigos').select('*').eq('sucursal',baristaSuc).order('created_at',{ascending:false}).limit(1);
+  if(data&&data.length&&Math.floor(Date.now()/1000)<data[0].expira_en){showBCode(data[0].codigo,data[0].expira_en);}
+  else generateCode();
+}
+async function generateCode(){
+  const code=String(Math.floor(1000+Math.random()*9000));
+  const expira_en=Math.floor(Date.now()/1000)+120;
+  await sb.from('codigos').delete().eq('sucursal',baristaSuc);
+  await sb.from('codigos').insert({codigo:code,sucursal:baristaSuc,expira_en});
+  showBCode(code,expira_en);toast('Nuevo código generado');
+}
+function showBCode(code,expira){
+  document.getElementById('bCode').textContent=code.split('').join(' ');
+  clearInterval(bTimerInterval);
+  const total=120;
+  bTimerInterval=setInterval(()=>{
+    const rem=expira-Math.floor(Date.now()/1000);
+    if(rem<=0){clearInterval(bTimerInterval);document.getElementById('bTimer').textContent='Expirado';document.getElementById('bTimerFill').style.width='0%';return;}
+    const m=Math.floor(rem/60),s=rem%60;
+    document.getElementById('bTimer').textContent=m+':'+(s<10?'0':'')+s;
+    document.getElementById('bTimerFill').style.width=(rem/total*100)+'%';
+  },500);
+}
 
-  async function renderClientList(){
-    document.getElementById('clientList').innerHTML='<div class="loading">Cargando...</div>';
-    const {data:f}=await sb.from('clientes').select('*').eq('sucursal',adminSuc).order('created_at',{ascending:false});
-    const clients=f||[];
-    document.getElementById('statGrid').innerHTML=`
-      <div class="stat-card"><div class="num">${clients.length}</div><div class="lbl">Clientes</div></div>
-      <div class="stat-card"><div class="num">${clients.reduce((a,c)=>a+(c.sellos||0),0)}</div><div class="lbl">Sellos activos</div></div>
-      <div class="stat-card"><div class="num">${clients.reduce((a,c)=>a+(c.gratis||0),0)}</div><div class="lbl">Cafés gratis</div></div>`;
-    const list=document.getElementById('clientList');
-    if(!clients.length){list.innerHTML='<div class="empty-state"><i class="ti ti-coffee" style="font-size:32px"></i><br><br>Sin clientes registrados aún.</div>';return;}
-    list.innerHTML=clients.map(c=>{
-      const ini=c.nombre.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-      const dots=Array.from({length:8},(_,i)=>`<div class="mini-stamp${i<c.sellos?' f':''}"></div>`).join('');
-      const fecha=c.created_at?new Date(c.created_at).toLocaleDateString('es-CL'):'—';
-      return `<div class="client-row">
-        <div class="avatar">${ini}</div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;font-weight:600;">${c.nombre}</div>
-          <div style="font-size:11px;color:var(--text-sec);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.email}</div>
-          <div class="mini-stamps">${dots}</div>
-        </div>
-        <div style="text-align:right;flex-shrink:0;">
-          <div class="suc-pill ${c.sucursal}">${c.sucursal==='centro'?'Centro':'Providencia'}</div>
-          <div style="font-size:11px;color:var(--text-sec);margin-top:4px;">Desde ${fecha}</div>
-          ${c.gratis>0?`<div style="font-size:11px;color:var(--sl-mid);margin-top:2px;">${c.gratis} gratis canjeado${c.gratis>1?'s':''}</div>`:''}
-        </div>
-      </div>`;
-    }).join('');
-  }
+async function loadPromoEditor(){
+  const {data}=await sb.from('promo').select('*').eq('activa',true).order('id',{ascending:false}).limit(1);
+  if(data&&data.length){document.getElementById('pe-titulo').value=data[0].titulo||'';document.getElementById('pe-desc').value=data[0].descripcion||'';document.getElementById('pe-valid').value=data[0].validez||'';}
+}
+async function savePromo(){
+  const titulo=document.getElementById('pe-titulo').value.trim();
+  const descripcion=document.getElementById('pe-desc').value.trim();
+  const validez=document.getElementById('pe-valid').value.trim();
+  if(!titulo){toast('Ingresa un título');return;}
+  loading(true,'Guardando promoción...');
+  await sb.from('promo').update({activa:false}).eq('activa',true);
+  await sb.from('promo').insert({activa:true,titulo,descripcion,validez});
+  loading(false);toast('Promoción guardada ✓');
+}
 
-  async function exportCSV(){
-    const {data:f}=await sb.from('clientes').select('*').eq('sucursal',adminSuc);
-    const clients=f||[];
-    const rows=clients.map(c=>`${c.nombre},${c.email},${c.telefono||''},${c.sellos},${c.gratis||0},${c.sucursal},${c.created_at?new Date(c.created_at).toLocaleDateString('es-CL'):''}`).join('\n');
-    const blob=new Blob(['Nombre,Correo,Teléfono,Sellos,Gratis,Sucursal,Desde\n'+rows],{type:'text/csv'});
-    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`clientes-santa-lena-${adminSuc}.csv`;a.click();
-  }
+async function loadClients(){
+  const {data,count}=await sb.from('clientes').select('*',{count:'exact'}).eq('sucursal',baristaSuc).order('created_at',{ascending:false});
+  document.getElementById('bClientesCount').textContent=count||0;
+  document.getElementById('ccCount').textContent=(count||0)+' en '+(baristaSuc==='centro'?'Centro':'Providencia');
+  document.getElementById('bSellosCount').textContent=(data||[]).reduce((a,c)=>a+(c.sellos||0),0);
+  const list=document.getElementById('clientsList');
+  if(!data||!data.length){list.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px">Sin clientes en esta sucursal aún</div>';return;}
+  list.innerHTML=data.map(c=>{
+    const nom=c.nombre+' '+(c.apellido||'');
+    const ini=((c.nombre[0]||'')+((c.apellido||' ')[0]||'')).toUpperCase();
+    const dots=[...Array(8)].map((_,i)=>`<div class="mini-dot ${i<(c.sellos||0)?'f':''}"></div>`).join('');
+    const since=c.created_at?new Date(c.created_at).toLocaleDateString('es-CL',{month:'short',year:'2-digit'}):'—';
+    return `<div class="client-row"><div class="avatar">${ini}</div><div class="cr-info"><div class="cr-name">${esc(nom)}</div><div class="cr-meta">${esc(c.email)} · ${esc(c.telefono||'—')}</div><div class="mini-stamps">${dots}</div></div><div class="cr-right"><div class="cr-pill">${c.sellos||0}/8</div><div class="cr-since">Desde ${since}</div>${c.gratis>0?`<div style="font-size:10px;color:var(--sage);margin-top:2px">${c.gratis} gratis</div>`:''}</div></div>`;
+  }).join('');
+}
 
-  async function init(){
-    const {data}=await sb.from('promo').select('*').limit(1).maybeSingle();
-    if(data) promo=data;
-    if(currentClient){
-      const {data:c}=await sb.from('clientes').select('*').eq('id',currentClient.id).maybeSingle();
-      if(c){currentClient=c;saveCur();}
-      renderCard(); showScreen('scrCard');
-    }
-  }
+async function exportCSV(){
+  loading(true,'Exportando...');
+  const {data}=await sb.from('clientes').select('*').eq('sucursal',baristaSuc).order('created_at');
+  loading(false);
+  if(!data||!data.length){toast('No hay clientes para exportar');return;}
+  const head='Nombre,Apellido,Correo,Teléfono,Sellos,Gratis,Sucursal,Acepta promos,Desde';
+  const rows=data.map(c=>[c.nombre,c.apellido||'',c.email,c.telefono||'',c.sellos||0,c.gratis||0,c.sucursal,c.acepta_promos?'Sí':'No',c.created_at||''].map(x=>`"${(x+'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+head+'\n'+rows],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='clientes-santa-lena-'+baristaSuc+'.csv';a.click();
+  toast('CSV descargado ✓');
+}
 
-  init();
+window.addEventListener('load',async()=>{
+  const email=localStorage.getItem('sl_email');
+  if(!email)return;
+  loading(true,'Cargando tu cuenta...');
+  const {data}=await sb.from('clientes').select('*').eq('email',email).maybeSingle();
+  loading(false);
+  if(data){currentClient=data;openClient();}
+  else localStorage.removeItem('sl_email');
+});
 </script>
 </body>
 </html>
