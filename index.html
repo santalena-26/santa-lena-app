@@ -301,11 +301,12 @@ body{min-height:100%;background:var(--sl-dark);font-family:'DM Sans',sans-serif;
         <div class="ig"><label>Correo electrónico</label><input type="email" id="recover-email" placeholder="tu@correo.cl"></div>
         <div class="auth-err" id="recoverErr1"></div>
         <button class="btn" onclick="sendRecoverCode()">Enviar código al correo</button>
+        <p style="font-size:11px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.6">📩 Si no encuentras el email, revisa tu carpeta de <strong style="color:var(--sl-cream)">Spam o Correo no deseado</strong> y márcalo como "No es spam".</p>
       </div>
       <div id="recoverStep2" style="display:none">
         <div class="ig">
-          <label>Código recibido por email (6 dígitos)</label>
-          <input type="text" id="recover-code" placeholder="123456" maxlength="6" inputmode="numeric" style="letter-spacing:6px;font-size:18px;text-align:center">
+          <label>Código recibido por email</label>
+          <input type="text" id="recover-code" placeholder="12345678" maxlength="8" inputmode="numeric" style="letter-spacing:4px;font-size:18px;text-align:center">
         </div>
         <div class="ig">
           <label>Nuevo PIN (4 dígitos)</label>
@@ -590,7 +591,7 @@ async function confirmRecoverPin(){
   const newpin=document.getElementById('recover-newpin').value.trim();
   const newpin2=document.getElementById('recover-newpin2').value.trim();
   const err=document.getElementById('recoverErr2');err.textContent='';
-  if(!code||code.length<6){err.textContent='Ingresa el código de 6 dígitos.';return;}
+  if(!code||code.length<6){err.textContent='Ingresa el código completo recibido por email.';return;}
   if(!newpin||newpin.length!==4){err.textContent='El PIN debe ser de 4 dígitos.';return;}
   if(newpin!==newpin2){err.textContent='Los PIN no coinciden.';return;}
   loading(true,'Verificando código...');
