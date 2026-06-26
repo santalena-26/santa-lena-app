@@ -633,6 +633,7 @@ async function registerClient(){
   const pin=document.getElementById('reg-pin').value.trim();
   const pin2=document.getElementById('reg-pin2').value.trim();
   const acepta=document.getElementById('consent-data').checked;
+  const referido=document.getElementById('reg-referido')?.value.trim()||null;
   const err=document.getElementById('regErr');err.textContent='';
   if(!nombre){err.textContent='Ingresa tu nombre.';return;}
   if(!apellido){err.textContent='Ingresa tu apellido.';return;}
@@ -642,12 +643,20 @@ async function registerClient(){
   if(pin!==pin2){err.textContent='Los PIN no coinciden.';return;}
   if(!acepta){err.textContent='Debes autorizar el uso de tus datos para continuar.';return;}
   loading(true,'Creando tu tarjeta...');
-  const {data:exist}=await sb.from('clientes').select('*').eq('email',email).maybeSingle();
-  if(exist){loading(false);currentClient=exist;saveCur();openClient();toast('¡Ya tenías cuenta! Bienvenido, '+exist.nombre);return;}
-  const {data,error}=await sb.from('clientes').insert({nombre,apellido,email,telefono,pin,sucursal:regSucSel,sellos:0,gratis:0,acepta_promos:true}).select().single();
+  const {error}=await sb.rpc('registrar_cliente',{
+    p_nombre:nombre,p_apellido:apellido,p_email:email,p_telefono:telefono,
+    p_pin:pin,p_sucursal:regSucSel,p_acepta_promos:acepta,p_codigo_referido:referido
+  });
+  if(error){
+    loading(false);
+    if(error.message&&error.message.includes('email_ya_registrado')){
+      err.textContent='Ya tienes una cuenta con ese correo. Inicia sesión con tu PIN.';
+    }else{err.textContent='Error al registrar. Revisa los datos.';console.error(error);}
+    return;
+  }
+  const {data:log}=await sb.rpc('login_cliente',{p_email:email,p_pin:pin});
   loading(false);
-  if(error){err.textContent='Error al registrar. Revisa los datos.';console.error(error);return;}
-  currentClient=data;saveCur();openClient();toast('¡Bienvenido al Club Santa Leña! 🎉');
+  currentClient=log[0];saveCur();openClient();toast('¡Bienvenido al Club Santa Leña! 🎉');
 }
 
 function openClient(){
