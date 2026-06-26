@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Santa Leña — Club de Clientes</title>
 <link rel="manifest" href="manifest.json">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -177,7 +177,7 @@ body{min-height:100%;background:var(--sl-dark);font-family:'DM Sans',sans-serif;
 .sh-t{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;color:var(--sl-cream)}
 .promos-scr{padding:0 18px;display:flex;gap:11px;overflow-x:auto;scrollbar-width:none;margin-bottom:18px}
 .promos-scr::-webkit-scrollbar{display:none}
-.pc{flex-shrink:0;width:215px;background:var(--card);border-radius:14px;border:1px solid rgba(200,144,58,.12)}
+.pc{flex-shrink:0;width:calc(100vw - 54px);max-width:380px;background:var(--card);border-radius:16px;border:1px solid rgba(200,144,58,.18)}
 .pc-body{padding:14px 15px}
 .pc-tag{display:inline-block;background:var(--sl-gold);color:var(--sl-dark);font-size:9px;font-weight:500;padding:3px 8px;border-radius:100px;margin-bottom:8px}
 .pc-name{font-size:14px;font-weight:500;color:var(--sl-cream);margin-bottom:4px;font-family:'Playfair Display',serif}
@@ -199,7 +199,7 @@ body{min-height:100%;background:var(--sl-dark);font-family:'DM Sans',sans-serif;
 .cd-timer-txt span{color:var(--sl-gold);font-weight:500}
 .btn-new-code{width:100%;background:#4a2c10;border:1px solid rgba(200,144,58,.2);border-radius:9px;padding:11px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--sl-cream);cursor:pointer;transition:all .2s;margin-top:10px}
 .btn-new-code:hover{background:#553418}
-.promo-editor{margin:0 18px 14px;background:var(--card);border-radius:16px;padding:16px 18px;border:1px solid rgba(200,144,58,.12)}
+.promo-editor{margin:0 18px 14px;background:var(--card);border-radius:16px;padding:20px;border:1px solid rgba(200,144,58,.18)}
 .pe-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;display:block}
 .pe-input,.pe-textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(200,144,58,.2);border-radius:9px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--sl-cream);outline:none;margin-bottom:10px}
 .pe-input:focus,.pe-textarea:focus{border-color:var(--sl-gold)}
@@ -239,17 +239,20 @@ body{min-height:100%;background:var(--sl-dark);font-family:'DM Sans',sans-serif;
 
 <!-- ════ PANTALLA 1 — ELEGIR PERFIL ════ -->
 <div class="screen active" id="choose">
+  <!-- LOGO: imagen circular. Si no carga, muestra el logo tipográfico -->
   <div class="ch-logo">
     <svg width="54" height="54" viewBox="0 0 90 90" fill="none">
       <path d="M45 72C30 72 20 60 20 48C20 36 28 30 32 22C34 18 36 14 36 14C38 20 38 24 40 26C40 20 42 16 44 12C46 8 50 6 50 6C50 16 52 20 55 24C57 28 58 32 60 36C62 30 62 26 62 26C64 30 70 36 70 48C70 60 60 72 45 72Z" fill="url(#fg)"/>
       <circle cx="45" cy="52" r="5" fill="rgba(255,220,150,0.85)"><animate attributeName="r" values="5;7;5" dur="1.6s" repeatCount="indefinite"/></circle>
       <defs><radialGradient id="fg" cx="50%" cy="80%" r="60%"><stop offset="0%" stop-color="#E8B04A"/><stop offset="45%" stop-color="#c8903a"/><stop offset="100%" stop-color="#8B3A0F"/></radialGradient></defs>
     </svg>
-    <!-- LOGO: sube tu archivo circular a GitHub con el nombre logo.png y aparece aquí. Si no está, se muestra el texto de abajo. -->
-    <img class="ch-logo-img" src="logo%20SL%20-%20JPG.jpg" alt="Santa Leña" onerror="this.style.display='none';document.getElementById('brandText').style.display='block'">
+    <img class="ch-logo-img" src="logo%20SL%20-%20JPG.jpg" alt="Santa Leña" onerror="this.style.display='none';document.getElementById('logoTipo').style.display='block'">
   </div>
-  <div class="ch-brand" id="brandText" style="display:none">Santa Leña</div>
-  <div class="ch-tag" style="margin-top:14px">Brunch &amp; Panadería Artesanal</div>
+  <!-- Logo tipográfico (respaldo si no carga la imagen, o puede usarse como alternativa) -->
+  <div id="logoTipo" style="display:none;text-align:center;margin-top:4px">
+    <div style="font-family:'Dancing Script',cursive;font-size:48px;font-weight:700;color:var(--sl-cream);line-height:1;letter-spacing:-1px">Santa Leña</div>
+    <div style="font-size:10px;color:var(--sl-gold);letter-spacing:3px;text-transform:uppercase;margin-top:6px;font-family:'DM Sans',sans-serif">Brunch &amp; Panadería Artesanal</div>
+  </div>
   <div class="ch-pillars">
     <div class="ch-pillar"><span style="font-size:14px">🍞</span> Pan fresco cada día</div>
     <div class="ch-pillar"><span style="font-size:14px">☕</span> Café de especialidad</div>
@@ -476,15 +479,32 @@ body{min-height:100%;background:var(--sl-dark);font-family:'DM Sans',sans-serif;
     <button class="btn-new-code" onclick="generateCode()">↺ Generar nuevo código</button>
   </div>
 
-  <div class="sh"><span class="sh-t">Promoción del mes</span></div>
-  <div class="promo-editor">
-    <label class="pe-label">Título</label>
-    <input class="pe-input" id="pe-titulo" placeholder="Ej: 2×1 en croissants" maxlength="50">
-    <label class="pe-label">Descripción</label>
-    <textarea class="pe-textarea" id="pe-desc" placeholder="Ej: Martes y miércoles antes de las 11 AM"></textarea>
-    <label class="pe-label">Validez</label>
-    <input class="pe-input" id="pe-valid" placeholder="Ej: Válido hasta el domingo" maxlength="50">
-    <button class="btn" onclick="savePromo()">Guardar promoción</button>
+  <div class="sh"><span class="sh-t">Promociones activas</span></div>
+
+  <!-- Lista de promociones activas con botón eliminar -->
+  <div id="bPromoList" style="margin:0 18px 14px"></div>
+
+  <!-- Formulario nueva promoción (oculto por defecto) -->
+  <div id="promoForm" style="display:none">
+    <div class="promo-editor">
+      <label class="pe-label">Título</label>
+      <input class="pe-input" id="pe-titulo" placeholder="Ej: 2×1 en croissants" maxlength="50">
+      <label class="pe-label">Descripción</label>
+      <textarea class="pe-textarea" id="pe-desc" placeholder="Ej: Martes y miércoles antes de las 11 AM"></textarea>
+      <label class="pe-label">Validez</label>
+      <input class="pe-input" id="pe-valid" placeholder="Ej: Válido hasta el domingo" maxlength="50">
+      <div style="display:flex;gap:9px">
+        <button class="btn" onclick="savePromo()" style="flex:1">Guardar</button>
+        <button onclick="togglePromoForm()" style="flex:0 0 auto;background:rgba(255,255,255,.06);border:1px solid rgba(200,144,58,.2);border-radius:11px;padding:0 18px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón agregar nueva promo -->
+  <div style="margin:0 18px 14px">
+    <button onclick="togglePromoForm()" id="btnAddPromo" style="width:100%;background:rgba(200,144,58,.1);border:1.5px dashed rgba(200,144,58,.4);border-radius:14px;padding:14px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--sl-gold);cursor:pointer;transition:all .2s">
+      + Agregar promoción
+    </button>
   </div>
 
   <div class="b-stats">
@@ -678,7 +698,7 @@ async function validateCode(){
   loading(false);
   if(!rows||!rows.length){showErr('No hay código activo en esta sucursal. Pídelo al barista.');return;}
   const row=rows[0];
-  if(Math.floor(Date.now()/1000)>row.expira_en){showErr('El código expiró. Pide uno nuevo.');return;}
+  if(Math.floor(Date.now()/1000)>Number(row.expira_en)+5){showErr('El código expiró. Pide uno nuevo.');return;}
   if(input!==row.codigo){showErr('Código incorrecto. Verifica con el barista.');return;}
   const sellosActual=currentClient.sellos||0;
   let finalSellos,newGratis=currentClient.gratis||0,full=false;
@@ -719,12 +739,12 @@ function setBaristaSuc(s){
 
 async function loadBaristaCode(){
   const {data}=await sb.from('codigos').select('*').eq('sucursal',baristaSuc).order('created_at',{ascending:false}).limit(1);
-  if(data&&data.length&&Math.floor(Date.now()/1000)<data[0].expira_en){showBCode(data[0].codigo,data[0].expira_en);}
+  if(data&&data.length&&Math.floor(Date.now()/1000)<Number(data[0].expira_en)+5){showBCode(data[0].codigo,Number(data[0].expira_en));}
   else generateCode();
 }
 async function generateCode(){
   const code=String(Math.floor(1000+Math.random()*9000));
-  const expira_en=Math.floor(Date.now()/1000)+120;
+  const expira_en=parseInt(Math.floor(Date.now()/1000)+120,10);
   await sb.from('codigos').delete().eq('sucursal',baristaSuc);
   await sb.from('codigos').insert({codigo:code,sucursal:baristaSuc,expira_en});
   showBCode(code,expira_en);toast('Nuevo código generado');
@@ -742,26 +762,74 @@ function showBCode(code,expira){
   },500);
 }
 
-async function loadPromoEditor(){
-  const {data}=await sb.from('promo').select('*').eq('activa',true).order('id',{ascending:false}).limit(1);
-  if(data&&data.length){document.getElementById('pe-titulo').value=data[0].titulo||'';document.getElementById('pe-desc').value=data[0].descripcion||'';document.getElementById('pe-valid').value=data[0].validez||'';}
+function togglePromoForm(){
+  const form=document.getElementById('promoForm');
+  const btn=document.getElementById('btnAddPromo');
+  const visible=form.style.display!=='none';
+  form.style.display=visible?'none':'block';
+  btn.textContent=visible?'+ Agregar promoción':'− Cerrar formulario';
+  if(!visible){
+    document.getElementById('pe-titulo').value='';
+    document.getElementById('pe-desc').value='';
+    document.getElementById('pe-valid').value='';
+    document.getElementById('pe-titulo').focus();
+  }
 }
+
+async function loadPromoEditor(){
+  loadBPromoList();
+}
+
+async function loadBPromoList(){
+  const {data}=await sb.from('promo').select('*').eq('activa',true).order('id',{ascending:false});
+  const cont=document.getElementById('bPromoList');
+  if(!data||!data.length){
+    cont.innerHTML='<div style="margin:0 0 14px;padding:14px 16px;background:var(--card);border-radius:14px;border:1px dashed rgba(200,144,58,.2);text-align:center;font-size:12px;color:var(--muted)">No hay promociones activas</div>';
+    return;
+  }
+  cont.innerHTML=data.map(p=>`
+    <div style="background:var(--card);border-radius:16px;padding:16px 18px;border:1px solid rgba(200,144,58,.18);margin-bottom:10px;display:flex;align-items:flex-start;gap:12px">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:500;color:var(--sl-cream);margin-bottom:3px">${esc(p.titulo)}</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5">${esc(p.descripcion||'')}</div>
+        ${p.validez?`<div style="font-size:10px;color:var(--sl-gold);margin-top:5px">${esc(p.validez)}</div>`:''}
+      </div>
+      <button onclick="deletePromo(${p.id})" style="background:rgba(200,80,60,.12);border:1px solid rgba(200,80,60,.25);border-radius:9px;padding:7px 11px;color:#e8857a;font-size:12px;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:DM Sans,sans-serif;transition:all .2s" onmouseover="this.style.background='rgba(200,80,60,.22)'" onmouseout="this.style.background='rgba(200,80,60,.12)'">
+        🗑 Eliminar
+      </button>
+    </div>`).join('');
+}
+
+async function deletePromo(id){
+  if(!confirm('¿Eliminar esta promoción?'))return;
+  loading(true,'Eliminando...');
+  await sb.from('promo').delete().eq('id',id);
+  loading(false);
+  toast('Promoción eliminada');
+  loadBPromoList();
+  loadPromos();
+}
+
 async function savePromo(){
   const titulo=document.getElementById('pe-titulo').value.trim();
   const descripcion=document.getElementById('pe-desc').value.trim();
   const validez=document.getElementById('pe-valid').value.trim();
-  if(!titulo){toast('Ingresa un título');return;}
+  if(!titulo){toast('Ingresa un título para la promoción');return;}
   loading(true,'Guardando promoción...');
-  await sb.from('promo').update({activa:false}).eq('activa',true);
   await sb.from('promo').insert({activa:true,titulo,descripcion,validez});
-  loading(false);toast('Promoción guardada ✓');
+  loading(false);
+  toast('Promoción guardada ✓');
+  togglePromoForm();
+  loadBPromoList();
+  loadPromos();
 }
 
 async function loadClients(){
-  const {data,count}=await sb.from('clientes').select('*',{count:'exact'}).eq('sucursal',baristaSuc).order('created_at',{ascending:false});
+  const {data,count}=await sb.from('clientes').select('*',{count:'exact'}).order('created_at',{ascending:false});
+  const enSucursal=(data||[]).filter(c=>c.sucursal===baristaSuc);
   document.getElementById('bClientesCount').textContent=count||0;
-  document.getElementById('ccCount').textContent=(count||0)+' en '+(baristaSuc==='centro'?'Centro':'Providencia');
-  document.getElementById('bSellosCount').textContent=(data||[]).reduce((a,c)=>a+(c.sellos||0),0);
+  document.getElementById('ccCount').textContent='Total: '+(count||0)+' clientes';
+  document.getElementById('bSellosCount').textContent=enSucursal.reduce((a,c)=>a+(c.sellos||0),0);
   const list=document.getElementById('clientsList');
   if(!data||!data.length){list.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px">Sin clientes en esta sucursal aún</div>';return;}
   list.innerHTML=data.map(c=>{
