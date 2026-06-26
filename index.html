@@ -581,12 +581,12 @@ async function loginClient(){
   if(!email||!email.includes('@')){err.textContent='Ingresa un correo válido.';return;}
   if(!pin||pin.length!==4){err.textContent='Ingresa tu PIN de 4 dígitos.';return;}
   loading(true,'Verificando...');
-  const {data}=await sb.from('clientes').select('*').eq('email',email).maybeSingle();
+  const {data,error}=await sb.rpc('login_cliente',{p_email:email,p_pin:pin});
   loading(false);
-  if(!data){err.textContent='No encontramos ese correo. Regístrate primero.';return;}
-  if(data.pin===null||data.pin===undefined){err.textContent='Tu cuenta no tiene PIN. Usa "¿Olvidaste tu PIN?" para crear uno.';return;}
-  if(data.pin!==pin){err.textContent='PIN incorrecto. Inténtalo de nuevo.';return;}
-  currentClient=data;saveCur();openClient();toast('¡Bienvenido de vuelta, '+data.nombre+'!');
+  if(error){err.textContent='Hubo un problema. Inténtalo de nuevo.';return;}
+  const cliente=data&&data[0];
+  if(!cliente){err.textContent='Correo o PIN incorrecto. Inténtalo de nuevo.';return;}
+  currentClient=cliente;saveCur();openClient();toast('¡Bienvenido de vuelta, '+cliente.nombre+'!');
 }
 
 /* ── RECUPERAR PIN con Supabase OTP ── */
