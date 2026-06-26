@@ -537,6 +537,7 @@ let visitSuc = 'providencia';
 let baristaSuc = 'providencia';
 let curStar = 0;
 let recoverEmailTemp = '';
+let editingPromoId = null;
 let bTimerInterval = null;
 
 const GOOGLE_URLS = {
@@ -769,10 +770,13 @@ function togglePromoForm(){
   form.style.display=visible?'none':'block';
   btn.textContent=visible?'+ Agregar promoción':'− Cerrar formulario';
   if(!visible){
+    editingPromoId=null;
     document.getElementById('pe-titulo').value='';
     document.getElementById('pe-desc').value='';
     document.getElementById('pe-valid').value='';
     document.getElementById('pe-titulo').focus();
+  } else {
+    editingPromoId=null;
   }
 }
 
@@ -781,23 +785,57 @@ async function loadPromoEditor(){
 }
 
 async function loadBPromoList(){
-  const {data}=await sb.from('promo').select('*').eq('activa',true).order('id',{ascending:false});
+  const {data,error}=await sb.from('promo').select('*').eq('activa',true).order('id',{ascending:false});
   const cont=document.getElementById('bPromoList');
+  if(error){
+    cont.innerHTML='<div style="font-size:13px;color:#e8857a;padding:12px;text-align:center">Error al cargar promociones</div>';
+    return;
+  }
   if(!data||!data.length){
-    cont.innerHTML='<div style="margin:0 0 14px;padding:14px 16px;background:var(--card);border-radius:14px;border:1px dashed rgba(200,144,58,.2);text-align:center;font-size:14px;color:var(--muted)">No hay promociones activas</div>';
+    cont.innerHTML='<div style="margin:0 0 14px;padding:16px;background:var(--card);border-radius:14px;border:1px dashed rgba(200,144,58,.2);text-align:center;font-size:14px;color:var(--muted)">No hay promociones activas aún</div>';
     return;
   }
   cont.innerHTML=data.map(p=>`
-    <div style="background:var(--card);border-radius:16px;padding:16px 18px;border:1px solid rgba(200,144,58,.18);margin-bottom:10px;display:flex;align-items:flex-start;gap:12px">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:16px;font-weight:500;color:var(--sl-cream);margin-bottom:3px">${esc(p.titulo)}</div>
+    <div style="background:var(--card);border-radius:16px;padding:18px;border:1px solid rgba(200,144,58,.18);margin-bottom:10px">
+      <div style="margin-bottom:12px">
+        <div style="font-size:16px;font-weight:500;color:var(--sl-cream);margin-bottom:4px">${esc(p.titulo)}</div>
         <div style="font-size:14px;color:var(--muted);line-height:1.5">${esc(p.descripcion||'')}</div>
-        ${p.validez?`<div style="font-size:12px;color:var(--sl-gold);margin-top:5px">${esc(p.validez)}</div>`:''}
+        ${p.validez?`<div style="font-size:12px;color:var(--sl-gold);margin-top:6px">${esc(p.validez)}</div>`:''}
       </div>
-      <button onclick="deletePromo(${p.id})" style="background:rgba(200,80,60,.12);border:1px solid rgba(200,80,60,.25);border-radius:9px;padding:7px 11px;color:#e8857a;font-size:14px;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:DM Sans,sans-serif;transition:all .2s" onmouseover="this.style.background='rgba(200,80,60,.22)'" onmouseout="this.style.background='rgba(200,80,60,.12)'">
-        🗑 Eliminar
-      </button>
+      <div style="display:flex;gap:8px">
+        <button onclick="editPromo(${p.id})"
+          style="flex:1;background:rgba(200,144,58,.1);border:1px solid rgba(200,144,58,.3);border-radius:9px;padding:10px;color:var(--sl-gold);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">
+          ✏️ Editar
+        </button>
+        <button onclick="deletePromo(${p.id})"
+          style="flex:1;background:rgba(200,80,60,.1);border:1px solid rgba(200,80,60,.25);border-radius:9px;padding:10px;color:#e8857a;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif">
+          🗑 Eliminar
+        </button>
+      </div>
     </div>`).join('');
+}
+
+// Cache de promos para edición
+let promosCache=[];
+async function refreshPromosCache(){
+  const {data}=await sb.from('promo').select('*').eq('activa',true).order('id',{ascending:false});
+  promosCache=data||[];
+}
+
+async function editPromo(id){
+  if(!promosCache.length) await refreshPromosCache();
+  const p=promosCache.find(x=>x.id===id);
+  if(!p){toast('No se encontró la promoción');return;}
+  editingPromoId=id;
+  document.getElementById('pe-titulo').value=p.titulo||'';
+  document.getElementById('pe-desc').value=p.descripcion||'';
+  document.getElementById('pe-valid').value=p.validez||'';
+  const form=document.getElementById('promoForm');
+  const btn=document.getElementById('btnAddPromo');
+  form.style.display='block';
+  btn.textContent='− Cerrar formulario';
+  form.scrollIntoView({behavior:'smooth',block:'start'});
+  toast('Editando: '+p.titulo);
 }
 
 async function deletePromo(id){
@@ -806,6 +844,7 @@ async function deletePromo(id){
   await sb.from('promo').delete().eq('id',id);
   loading(false);
   toast('Promoción eliminada');
+  promosCache=[];
   loadBPromoList();
   loadPromos();
 }
@@ -815,31 +854,22 @@ async function savePromo(){
   const descripcion=document.getElementById('pe-desc').value.trim();
   const validez=document.getElementById('pe-valid').value.trim();
   if(!titulo){toast('Ingresa un título para la promoción');return;}
-  loading(true,'Guardando promoción...');
-  await sb.from('promo').insert({activa:true,titulo,descripcion,validez});
+  loading(true,'Guardando...');
+  if(editingPromoId){
+    await sb.from('promo').update({titulo,descripcion,validez}).eq('id',editingPromoId);
+    toast('Promoción actualizada ✓');
+  } else {
+    await sb.from('promo').insert({activa:true,titulo,descripcion,validez});
+    toast('Promoción guardada ✓');
+  }
   loading(false);
-  toast('Promoción guardada ✓');
+  editingPromoId=null;
+  promosCache=[];
   togglePromoForm();
   loadBPromoList();
   loadPromos();
 }
 
-async function loadClients(){
-  const {data,count}=await sb.from('clientes').select('*',{count:'exact'}).order('created_at',{ascending:false});
-  const enSucursal=(data||[]).filter(c=>c.sucursal===baristaSuc);
-  document.getElementById('bClientesCount').textContent=count||0;
-  document.getElementById('ccCount').textContent='Total: '+(count||0)+' clientes';
-  document.getElementById('bSellosCount').textContent=enSucursal.reduce((a,c)=>a+(c.sellos||0),0);
-  const list=document.getElementById('clientsList');
-  if(!data||!data.length){list.innerHTML='<div style="font-size:14px;color:var(--muted);text-align:center;padding:8px">Sin clientes en esta sucursal aún</div>';return;}
-  list.innerHTML=data.map(c=>{
-    const nom=c.nombre+' '+(c.apellido||'');
-    const ini=((c.nombre[0]||'')+((c.apellido||' ')[0]||'')).toUpperCase();
-    const dots=[...Array(8)].map((_,i)=>`<div class="mini-dot ${i<(c.sellos||0)?'f':''}"></div>`).join('');
-    const since=c.created_at?new Date(c.created_at).toLocaleDateString('es-CL',{month:'short',year:'2-digit'}):'—';
-    return `<div class="client-row"><div class="avatar">${ini}</div><div class="cr-info"><div class="cr-name">${esc(nom)}</div><div class="cr-meta">${esc(c.email)} · ${esc(c.telefono||'—')}</div><div class="mini-stamps">${dots}</div></div><div class="cr-right"><div class="cr-pill">${c.sellos||0}/8</div><div class="cr-since">Desde ${since}</div>${c.gratis>0?`<div style="font-size:12px;color:var(--sage);margin-top:2px">${c.gratis} gratis</div>`:''}</div></div>`;
-  }).join('');
-}
 
 async function exportCSV(){
   loading(true,'Exportando...');
