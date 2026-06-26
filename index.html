@@ -246,7 +246,7 @@ body{min-height:100%;background:var(--sl-dark);font-family:'DM Sans',sans-serif;
       <defs><radialGradient id="fg" cx="50%" cy="80%" r="60%"><stop offset="0%" stop-color="#E8B04A"/><stop offset="45%" stop-color="#c8903a"/><stop offset="100%" stop-color="#8B3A0F"/></radialGradient></defs>
     </svg>
     <!-- LOGO: sube tu archivo circular a GitHub con el nombre logo.png y aparece aquí. Si no está, se muestra el texto de abajo. -->
-    <img class="ch-logo-img" src="logo.png" alt="Santa Leña" onerror="this.style.display='none';document.getElementById('brandText').style.display='block'">
+    <img class="ch-logo-img" src="logo%20SL%20-%20JPG.jpg" alt="Santa Leña" onerror="this.style.display='none';document.getElementById('brandText').style.display='block'">
   </div>
   <div class="ch-brand" id="brandText" style="display:none">Santa Leña</div>
   <div class="ch-tag" style="margin-top:14px">Brunch &amp; Panadería Artesanal</div>
@@ -282,10 +282,43 @@ body{min-height:100%;background:var(--sl-dark);font-family:'DM Sans',sans-serif;
     <!-- LOGIN -->
     <div id="loginForm">
       <div class="auth-title">Bienvenido de vuelta</div>
-      <div class="auth-sub">Ingresa con el correo que usaste al registrarte.</div>
-      <div class="ig"><label>Correo electrónico</label><input type="email" id="login-email" placeholder="tu@correo.cl"></div>
+      <div class="auth-sub">Ingresa con tu correo y PIN personal.</div>
+      <div class="ig"><label>Correo electrónico</label><input type="email" id="login-email" placeholder="tu@correo.cl" autocomplete="email"></div>
+      <div class="ig">
+        <label>PIN (4 dígitos)</label>
+        <input type="password" id="login-pin" placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="current-password" style="letter-spacing:8px;font-size:20px;text-align:center">
+      </div>
       <div class="auth-err" id="loginErr"></div>
       <button class="btn" onclick="loginClient()">Entrar a mi tarjeta</button>
+      <button onclick="showRecoverPin()" style="background:none;border:none;color:var(--muted);font-size:13px;text-decoration:underline;cursor:pointer;width:100%;margin-top:14px;text-align:center">¿Olvidaste tu PIN? Recupéralo aquí</button>
+    </div>
+
+    <!-- RECUPERAR PIN -->
+    <div id="recoverForm" style="display:none">
+      <div class="auth-title">Recuperar PIN</div>
+      <div class="auth-sub" id="recoverSub">Ingresa tu correo y te enviaremos un código para crear un PIN nuevo.</div>
+      <div id="recoverStep1">
+        <div class="ig"><label>Correo electrónico</label><input type="email" id="recover-email" placeholder="tu@correo.cl"></div>
+        <div class="auth-err" id="recoverErr1"></div>
+        <button class="btn" onclick="sendRecoverCode()">Enviar código al correo</button>
+      </div>
+      <div id="recoverStep2" style="display:none">
+        <div class="ig">
+          <label>Código recibido por email (6 dígitos)</label>
+          <input type="text" id="recover-code" placeholder="123456" maxlength="6" inputmode="numeric" style="letter-spacing:6px;font-size:18px;text-align:center">
+        </div>
+        <div class="ig">
+          <label>Nuevo PIN (4 dígitos)</label>
+          <input type="password" id="recover-newpin" placeholder="••••" maxlength="4" inputmode="numeric" style="letter-spacing:8px;font-size:20px;text-align:center">
+        </div>
+        <div class="ig">
+          <label>Confirmar nuevo PIN</label>
+          <input type="password" id="recover-newpin2" placeholder="••••" maxlength="4" inputmode="numeric" style="letter-spacing:8px;font-size:20px;text-align:center">
+        </div>
+        <div class="auth-err" id="recoverErr2"></div>
+        <button class="btn" onclick="confirmRecoverPin()">Guardar nuevo PIN</button>
+      </div>
+      <button onclick="showLoginForm()" style="background:none;border:none;color:var(--muted);font-size:13px;text-decoration:underline;cursor:pointer;width:100%;margin-top:14px;text-align:center">← Volver al inicio de sesión</button>
     </div>
 
     <!-- REGISTRO -->
@@ -298,6 +331,17 @@ body{min-height:100%;background:var(--sl-dark);font-family:'DM Sans',sans-serif;
       </div>
       <div class="ig"><label>Correo electrónico *</label><input type="email" id="reg-email" placeholder="tu@correo.cl"></div>
       <div class="ig"><label>Teléfono *</label><input type="tel" id="reg-tel" placeholder="+56 9 0000 0000"></div>
+      <div class="ig row2">
+        <div>
+          <label>PIN *</label>
+          <input type="password" id="reg-pin" placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="new-password" style="letter-spacing:8px;font-size:20px;text-align:center">
+        </div>
+        <div>
+          <label>Confirmar PIN *</label>
+          <input type="password" id="reg-pin2" placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="new-password" style="letter-spacing:8px;font-size:20px;text-align:center">
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">🔒 Tu PIN es personal. Lo usarás cada vez que entres a tu tarjeta.</div>
       <span class="suc-label">Tu sucursal *</span>
       <div class="suc-pick">
         <div class="sp-opt active" id="sp-c" onclick="pickSuc('centro')"><div class="sp-dot"></div><div class="sp-name">Centro</div><div class="sp-addr">San Antonio 333</div></div>
@@ -471,6 +515,7 @@ let regSucSel = 'centro';
 let visitSuc = 'providencia';
 let baristaSuc = 'providencia';
 let curStar = 0;
+let recoverEmailTemp = '';
 let bTimerInterval = null;
 
 const GOOGLE_URLS = {
@@ -492,17 +537,70 @@ function setAuthTab(t){
   document.getElementById('tab-register').classList.toggle('active',t==='register');
   document.getElementById('loginForm').style.display=t==='login'?'block':'none';
   document.getElementById('registerForm').style.display=t==='register'?'block':'none';
+  document.getElementById('recoverForm').style.display='none';
+}
+function showLoginForm(){
+  document.getElementById('loginForm').style.display='block';
+  document.getElementById('recoverForm').style.display='none';
+  document.getElementById('registerForm').style.display='none';
+}
+function showRecoverPin(){
+  document.getElementById('loginForm').style.display='none';
+  document.getElementById('recoverForm').style.display='block';
+  document.getElementById('recoverStep1').style.display='block';
+  document.getElementById('recoverStep2').style.display='none';
+  document.getElementById('recoverErr1').textContent='';
+  document.getElementById('recoverErr2').textContent='';
 }
 
 async function loginClient(){
   const email=document.getElementById('login-email').value.trim().toLowerCase();
+  const pin=document.getElementById('login-pin').value.trim();
   const err=document.getElementById('loginErr');err.textContent='';
   if(!email||!email.includes('@')){err.textContent='Ingresa un correo válido.';return;}
-  loading(true,'Buscando tu cuenta...');
+  if(!pin||pin.length!==4){err.textContent='Ingresa tu PIN de 4 dígitos.';return;}
+  loading(true,'Verificando...');
   const {data}=await sb.from('clientes').select('*').eq('email',email).maybeSingle();
   loading(false);
   if(!data){err.textContent='No encontramos ese correo. Regístrate primero.';return;}
+  if(data.pin===null||data.pin===undefined){err.textContent='Tu cuenta no tiene PIN. Usa "¿Olvidaste tu PIN?" para crear uno.';return;}
+  if(data.pin!==pin){err.textContent='PIN incorrecto. Inténtalo de nuevo.';return;}
   currentClient=data;saveCur();openClient();toast('¡Bienvenido de vuelta, '+data.nombre+'!');
+}
+
+/* ── RECUPERAR PIN con Supabase OTP ── */
+async function sendRecoverCode(){
+  const email=document.getElementById('recover-email').value.trim().toLowerCase();
+  const err=document.getElementById('recoverErr1');err.textContent='';
+  if(!email||!email.includes('@')){err.textContent='Ingresa un correo válido.';return;}
+  loading(true,'Verificando correo...');
+  const {data:existe}=await sb.from('clientes').select('id').eq('email',email).maybeSingle();
+  if(!existe){loading(false);err.textContent='No encontramos una cuenta con ese correo.';return;}
+  const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false}});
+  loading(false);
+  if(error){err.textContent='Error al enviar el código. Intenta de nuevo.';console.error(error);return;}
+  document.getElementById('recoverStep1').style.display='none';
+  document.getElementById('recoverStep2').style.display='block';
+  document.getElementById('recoverSub').textContent='Ingresa el código que te enviamos a '+email;
+  recoverEmailTemp=email;
+  toast('Código enviado a '+email+' 📧');
+}
+async function confirmRecoverPin(){
+  const code=document.getElementById('recover-code').value.trim();
+  const newpin=document.getElementById('recover-newpin').value.trim();
+  const newpin2=document.getElementById('recover-newpin2').value.trim();
+  const err=document.getElementById('recoverErr2');err.textContent='';
+  if(!code||code.length<6){err.textContent='Ingresa el código de 6 dígitos.';return;}
+  if(!newpin||newpin.length!==4){err.textContent='El PIN debe ser de 4 dígitos.';return;}
+  if(newpin!==newpin2){err.textContent='Los PIN no coinciden.';return;}
+  loading(true,'Verificando código...');
+  const {data:session,error:otpErr}=await sb.auth.verifyOtp({email:recoverEmailTemp,token:code,type:'email'});
+  if(otpErr){loading(false);err.textContent='Código incorrecto o expirado.';return;}
+  const {error:updateErr}=await sb.from('clientes').update({pin:newpin}).eq('email',recoverEmailTemp);
+  loading(false);
+  if(updateErr){err.textContent='Error al guardar el PIN. Intenta de nuevo.';return;}
+  toast('¡PIN actualizado! Ya puedes iniciar sesión 🎉');
+  showLoginForm();
 }
 
 function pickSuc(s){regSucSel=s;document.getElementById('sp-c').classList.toggle('active',s==='centro');document.getElementById('sp-p').classList.toggle('active',s==='providencia');}
@@ -511,17 +609,21 @@ async function registerClient(){
   const apellido=document.getElementById('reg-apellido').value.trim();
   const email=document.getElementById('reg-email').value.trim().toLowerCase();
   const telefono=document.getElementById('reg-tel').value.trim();
+  const pin=document.getElementById('reg-pin').value.trim();
+  const pin2=document.getElementById('reg-pin2').value.trim();
   const acepta=document.getElementById('consent-data').checked;
   const err=document.getElementById('regErr');err.textContent='';
   if(!nombre){err.textContent='Ingresa tu nombre.';return;}
   if(!apellido){err.textContent='Ingresa tu apellido.';return;}
   if(!email||!email.includes('@')){err.textContent='Ingresa un correo válido.';return;}
   if(!telefono){err.textContent='Ingresa tu teléfono.';return;}
+  if(!pin||pin.length!==4||isNaN(pin)){err.textContent='El PIN debe ser de 4 dígitos numéricos.';return;}
+  if(pin!==pin2){err.textContent='Los PIN no coinciden.';return;}
   if(!acepta){err.textContent='Debes autorizar el uso de tus datos para continuar.';return;}
   loading(true,'Creando tu tarjeta...');
   const {data:exist}=await sb.from('clientes').select('*').eq('email',email).maybeSingle();
   if(exist){loading(false);currentClient=exist;saveCur();openClient();toast('¡Ya tenías cuenta! Bienvenido, '+exist.nombre);return;}
-  const {data,error}=await sb.from('clientes').insert({nombre,apellido,email,telefono,sucursal:regSucSel,sellos:0,gratis:0,acepta_promos:true}).select().single();
+  const {data,error}=await sb.from('clientes').insert({nombre,apellido,email,telefono,pin,sucursal:regSucSel,sellos:0,gratis:0,acepta_promos:true}).select().single();
   loading(false);
   if(error){err.textContent='Error al registrar. Revisa los datos.';console.error(error);return;}
   currentClient=data;saveCur();openClient();toast('¡Bienvenido al Club Santa Leña! 🎉');
