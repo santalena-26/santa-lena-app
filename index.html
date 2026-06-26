@@ -576,7 +576,7 @@ async function sendRecoverCode(){
   loading(true,'Verificando correo...');
   const {data:existe}=await sb.from('clientes').select('id').eq('email',email).maybeSingle();
   if(!existe){loading(false);err.textContent='No encontramos una cuenta con ese correo.';return;}
-  const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:false}});
+  const {error}=await sb.auth.signInWithOtp({email,options:{shouldCreateUser:true}});
   loading(false);
   if(error){err.textContent='Error al enviar el código. Intenta de nuevo.';console.error(error);return;}
   document.getElementById('recoverStep1').style.display='none';
