@@ -619,7 +619,7 @@ async function confirmRecoverPin(){
   loading(true,'Verificando código...');
   const {data:session,error:otpErr}=await sb.auth.verifyOtp({email:recoverEmailTemp,token:code,type:'email'});
   if(otpErr){loading(false);err.textContent='Código incorrecto o expirado.';return;}
-  const {error:updateErr}=await sb.from('clientes').update({pin:newpin}).eq('email',recoverEmailTemp);
+  const {error:updateErr}=await sb.rpc('actualizar_pin',{p_email:recoverEmailTemp,p_pin_nuevo:newpin});
   loading(false);
   if(updateErr){err.textContent='Error al guardar el PIN. Intenta de nuevo.';return;}
   toast('¡PIN actualizado! Ya puedes iniciar sesión 🎉');
