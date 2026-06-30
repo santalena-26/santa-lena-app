@@ -705,26 +705,27 @@ async function validateCode(){
   document.getElementById('valErr').classList.remove('show');
   document.getElementById('btnVal').disabled=true;
   loading(true,'Validando...');
-  const {data:rows}=await sb.from('codigos').select('*').eq('sucursal',visitSuc).order('created_at',{ascending:false}).limit(1);
+  const {data:r,error}=await sb.rpc('registrar_visita',{
+    p_cliente_id:currentClient.id, p_codigo:input, p_sucursal:visitSuc
+  });
   loading(false);
-  if(!rows||!rows.length){showErr('No hay código activo en esta sucursal. Pídelo al barista.');return;}
-  const row=rows[0];
-  if(Math.floor(Date.now()/1000)>Number(row.expira_en)+5){showErr('El código expiró. Pide uno nuevo.');return;}
-  if(input!==row.codigo){showErr('Código incorrecto. Verifica con el barista.');return;}
-  const sellosActual=currentClient.sellos||0;
-  let finalSellos,newGratis=currentClient.gratis||0,full=false;
-  if(sellosActual+1>=8){finalSellos=0;newGratis++;full=true;}else{finalSellos=sellosActual+1;}
-  const {data,error}=await sb.from('clientes').update({sellos:finalSellos,gratis:newGratis}).eq('id',currentClient.id).select().single();
-  if(error){showErr('Error al guardar. Intenta de nuevo.');return;}
-  currentClient=data;saveCur();renderCard();
+  if(error||!r||!r.ok){
+    const motivo=r&&r.error==='codigo_invalido_o_expirado'
+      ?'Código incorrecto o expirado. Verifica con el barista.'
+      :'Error al validar. Intenta de nuevo.';
+    showErr(motivo);return;
+  }
+  currentClient.sellos=r.sellos;
+  if(r.premio_ganado){currentClient.gratis=(currentClient.gratis||0)+r.premios_nuevos;}
+  saveCur();renderCard();
   ['c1','c2','c3','c4'].forEach(id=>{const e=document.getElementById(id);e.value='';e.classList.remove('has');});
-  document.getElementById('valOkMsg').textContent=full?'¡Completaste 8 sellos! Ganaste un café gratis 🎉':('Ahora tienes '+currentClient.sellos+' de 8.');
+  document.getElementById('valOkMsg').textContent=r.premio_ganado?'¡Completaste tu tarjeta! Ganaste un café gratis 🎉':('Ahora tienes '+currentClient.sellos+' de 6.');
   document.getElementById('valOk').classList.add('show');
   const rr=document.getElementById('ratingReveal');rr.classList.add('show');
   curStar=0;[1,2,3,4,5].forEach(n=>document.getElementById('s'+n).classList.remove('on'));
   document.getElementById('btnOpinar').disabled=true;document.getElementById('btnOpinar').textContent='Opinar en Google →';document.getElementById('btnOpinar').classList.remove('done');
   setTimeout(()=>rr.scrollIntoView({behavior:'smooth',block:'center'}),200);
-  toast('🔥 ¡Sello sumado!');
+  toast(r.sumados===2?'🔥 ¡Sello doble sumado!':'🔥 ¡Sello sumado!');
 }
 function showErr(m){document.getElementById('valErrMsg').textContent=m;document.getElementById('valErr').classList.add('show');document.getElementById('btnVal').disabled=false;}
 
